@@ -1,0 +1,59 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: vet_clinic_db
+    environment:
+      POSTGRES_USER: ${PG_USER:-postgres}
+      POSTGRES_PASSWORD: ${PG_PWD:-postgres}
+      POSTGRES_DB: ${PG_DB:-vet_clinic}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:56723"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RMQ_PWD:-guest}
+    volumes:
+      - ./rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
+  redis:
+    image: "redis:latest"
+    ports:
+      - "6379:6379"
+    networks:
+      - logging-network
+  elasticsearch:
+    image: elasticsearch:8.8.0
+    container_name: elasticsearch
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+      xpack.security.enrollment.enabled: "true"
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    networks:
+      - logging-network
+  kibana:
+    image: kibana:8.8.0
+    container_name: kibana
+    environment:
+      - 'ELASTICSEARCH_HOSTS=["http://elasticsearch:9200"]'
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    networks:
+      - logging-network
+
+networks:
+  logging-network:
+    driver: bridge
