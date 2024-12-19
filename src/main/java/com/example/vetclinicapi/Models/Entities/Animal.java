@@ -3,6 +3,8 @@ package com.example.vetclinicapi.Models.Entities;
 import com.example.vetclinicapi.Models.Enums.AnimalType;
 import jakarta.persistence.*;
 
+import java.time.LocalTime;
+
 @Entity
 @Table(name = "animals")
 public class Animal extends BaseEntity {
@@ -13,21 +15,14 @@ public class Animal extends BaseEntity {
     private String breed;
     private String color;
     private AnimalType animalType;
+    private LocalTime createdAt;
+    private LocalTime updatedAt;
+
+    //!TODO добавать размер животного
 
     private User owner;
 
     protected Animal() {}
-
-    public Animal(String name, int age, String gender, String weight, String breed, String color, AnimalType animalType, User owner) {
-        this.name = name;
-        this.age = age;
-        this.gender = gender;
-        this.weight = weight;
-        this.breed = breed;
-        this.color = color;
-        this.animalType = animalType;
-        this.owner = owner;
-    }
 
     public String getName() {
         return name;
@@ -93,5 +88,21 @@ public class Animal extends BaseEntity {
 
     public void setAnimalType(AnimalType animalType) {
         this.animalType = animalType;
+    }
+
+    public LocalTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

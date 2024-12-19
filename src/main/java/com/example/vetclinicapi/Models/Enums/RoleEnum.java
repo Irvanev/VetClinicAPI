@@ -1,12 +1,14 @@
 package com.example.vetclinicapi.Models.Enums;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum RoleEnum {
 
     User (1, "Пользователь"),
     Doctor (2, "Доктор"),
     Admin (3, "Администартор");
 
-    private int number;
+    private final int number;
     private String name;
 
     RoleEnum(int number, String name) {
@@ -18,6 +20,7 @@ public enum RoleEnum {
         return number;
     }
 
+    @JsonValue
     public String getName() {
         return name;
     }

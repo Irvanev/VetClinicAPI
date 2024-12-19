@@ -1,7 +1,5 @@
 package com.example.vetclinicapi.Dtos.UserDto;
 
-import java.util.Date;
-
 public class RegisterUserDto {
     private String email;
     private String password;

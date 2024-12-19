@@ -1,9 +1,6 @@
 package com.example.vetclinicapi.Services.Impl;
 
 import com.example.vetclinicapi.Dtos.UserDto.AllUserDto;
-import com.example.vetclinicapi.Dtos.UserDto.RegisterUserDto;
-import com.example.vetclinicapi.Models.Entities.User;
-import com.example.vetclinicapi.Models.Enums.RoleEnum;
 import com.example.vetclinicapi.Repositories.RoleRepository;
 import com.example.vetclinicapi.Repositories.UserRepository;
 import com.example.vetclinicapi.Services.UserService;
@@ -12,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

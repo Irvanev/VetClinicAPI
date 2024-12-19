@@ -1,8 +1,10 @@
 package com.example.vetclinicapi.Models.Entities;
 
+import com.example.vetclinicapi.Models.Enums.RoleEnum;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
 
@@ -15,12 +17,13 @@ public class User extends BaseEntity {
     private String password;
     private Date dateOfBirth;
     private boolean enabled;
-
+    private LocalTime createdAt;
+    private LocalTime updatedAt;
     private String verificationCode;
     private LocalDateTime verificationCodeExpiresAt;
 
     private List<Animal> animals;
-    private Role role;
+    private RoleEnum role;
 
     protected User() {}
 
@@ -78,13 +81,11 @@ public class User extends BaseEntity {
         this.animals = animals;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    public Role getRole() {
+    public RoleEnum getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(RoleEnum role) {
         this.role = role;
     }
 
@@ -94,6 +95,22 @@ public class User extends BaseEntity {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public LocalTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public String getVerificationCode() {
