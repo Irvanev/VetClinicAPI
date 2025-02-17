@@ -1,0 +1,4 @@
+rootProject.name = 'vet-clinic'
+include 'email-service'
+include 'main-service'
+
