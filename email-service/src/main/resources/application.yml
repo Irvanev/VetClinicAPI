@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: email-service
+  config:
+    import: optional:file:.env[.properties]
+  rabbitmq:
+    host: ${RABBIT_MQ_HOST}
+    username: ${RABBIT_MQ_USERNAME}
+    password: ${RABBIT_MQ_PASSWORD}
+    virtual-host: ${RABBIT_MQ_VHOST}
+  mail:
+    host: smtp.mail.ru
+    port: 587
+    username: ${SUPPORT_EMAIL}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: smtp.mail.ru
+logging:
+  level:
+    dev.clinic.emailservice: DEBUG
+server:
+  port: 8081
