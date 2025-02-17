@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_USER: ${PG_USER:-postgres}
       POSTGRES_PASSWORD: ${PG_PWD:-postgres}
-      POSTGRES_DB: ${PG_DB:-postgres}
+      POSTGRES_DB: ${PG_DB:-clinic}
     ports:
       - "5432:5432"
     volumes:
