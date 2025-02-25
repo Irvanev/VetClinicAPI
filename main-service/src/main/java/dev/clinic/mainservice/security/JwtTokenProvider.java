@@ -24,14 +24,12 @@ public class JwtTokenProvider {
     @Value("${jwt.refresh-token-validity}")
     private long refreshTokenValidityInMillis;
 
-    // Инициализация ключа после внедрения свойств
     @PostConstruct
     public void init() {
-        // Создаем ключ на основе секрета; для HS512 рекомендуется использовать ключ достаточной длины.
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateAccessToken(String username) {
+    public String generateAccessToken(String username, String role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenValidityInMillis);
 
@@ -40,11 +38,12 @@ public class JwtTokenProvider {
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .claim("type", "access")
+                .claim("role", role)
                 .signWith(key)
                 .compact();
     }
 
-    public String generateRefreshToken(String username) {
+    public String generateRefreshToken(String username, String role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + refreshTokenValidityInMillis);
 
@@ -53,6 +52,7 @@ public class JwtTokenProvider {
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .claim("type", "refresh")
+                .claim("role", role)
                 .signWith(key)
                 .compact();
     }
@@ -62,7 +62,7 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException ex) {
-            // Логирование ошибки
+            System.out.println("Error JWT: " + ex.getMessage());
         }
         return false;
     }
@@ -82,5 +82,14 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
         return (String) claims.get("type");
+    }
+
+    public String getUserRoleFromJWT(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return (String) claims.get("role");
     }
 }

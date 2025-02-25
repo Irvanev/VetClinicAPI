@@ -1,6 +1,6 @@
 package dev.clinic.mainservice.services.impl;
 
-import dev.clinic.mainservice.dtos.*;
+import dev.clinic.mainservice.dtos.auth.*;
 import dev.clinic.mainservice.models.entities.Role;
 import dev.clinic.mainservice.models.entities.User;
 import dev.clinic.mainservice.models.enums.RoleEnum;
@@ -109,13 +109,18 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     public AuthResponse login(SignInRequest signInRequest) {
-        SignInRequest dto = modelMapper.map(signInRequest, SignInRequest.class);
+        String email = signInRequest.getEmail();
+        String password = signInRequest.getPassword();
 
-        var authToken = new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword());
-        authenticationManager.authenticate(authToken);
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, password);
+        var authentication = authenticationManager.authenticate(authToken);
 
-        String accessToken = tokenProvider.generateAccessToken(dto.getEmail());
-        String refreshToken = tokenProvider.generateRefreshToken(dto.getEmail());
+        var userDetails = (org.springframework.security.core.userdetails.UserDetails) authentication.getPrincipal();
+
+        String role = userDetails.getAuthorities().iterator().next().getAuthority();
+
+        String accessToken = tokenProvider.generateAccessToken(email, role);
+        String refreshToken = tokenProvider.generateRefreshToken(email, role);
 
         return new AuthResponse(accessToken, refreshToken);
     }
@@ -130,14 +135,15 @@ public class AuthServiceImpl implements AuthService {
         if (!tokenProvider.validateToken(providedRefreshToken)) {
             throw new IllegalArgumentException("Invalid refresh token");
         }
-
         if (!"refresh".equals(tokenProvider.getTokenType(providedRefreshToken))) {
             throw new IllegalArgumentException("Provided token is not a refresh token");
         }
 
         String email = tokenProvider.getUsernameFromJWT(providedRefreshToken);
-        String newAccessToken = tokenProvider.generateAccessToken(email);
-        String newRefreshToken = tokenProvider.generateRefreshToken(email);
+        String role = tokenProvider.getUserRoleFromJWT(providedRefreshToken);
+
+        String newAccessToken = tokenProvider.generateAccessToken(email, role);
+        String newRefreshToken = tokenProvider.generateRefreshToken(email, role);
 
         return new AuthResponse(newAccessToken, newRefreshToken);
     }

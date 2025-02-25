@@ -1,6 +1,6 @@
 package dev.clinic.mainservice.services;
 
-import dev.clinic.mainservice.dtos.*;
+import dev.clinic.mainservice.dtos.auth.*;
 
 public interface AuthService {
     void register(SignUpRequest signUpRequest);

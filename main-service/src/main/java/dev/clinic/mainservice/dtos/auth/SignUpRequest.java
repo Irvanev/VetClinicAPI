@@ -1,4 +1,4 @@
-package dev.clinic.mainservice.dtos;
+package dev.clinic.mainservice.dtos.auth;
 
 public class SignUpRequest {
     private String fullName;

@@ -1,7 +1,7 @@
 jwt:
   secret: ${JWT_SECRET_KEY}
-  access-token-validity: ${JWT_ACCESS_TIME}       # 15 минут
-  refresh-token-validity: ${JWT_REFRESH_TIME}   # 7 дней
+  access-token-validity: ${JWT_ACCESS_TIME}
+  refresh-token-validity: ${JWT_REFRESH_TIME}
 spring:
   config:
     import: optional:file:.env[.properties]
@@ -24,7 +24,7 @@ spring:
         format_sql: true
         show_sql: true
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
 
 logging:
   level:
