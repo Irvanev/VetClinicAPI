@@ -9,12 +9,9 @@ import java.util.List;
 /**
  * Сущность {@code User} представляет пользователя системы.
  * <p>
- * Данный класс хранит информацию о пользователе, включая его контактные данные,
+ * Данный класс хранит общую информацию о пользователе, включая его контактные данные,
  * данные для аутентификации, флаг подтверждения регистрации, а также сведения о
  * связанных сущностях, таких как список питомцев и роль.
- * </p>
- * <p>
- * Наследует {@link BaseEntity}, в котором храниться унификальный идентификатор.
  * </p>
  *
  * @author Irvanev
@@ -22,7 +19,11 @@ import java.util.List;
  */
 @Entity
 @Table(name = "users")
-public class User extends BaseEntity {
+@Inheritance(strategy = InheritanceType.JOINED)
+public abstract class User {
+
+    /** Уникальный идентификатор пользователя */
+    private Long id;
 
     /** Электронная почта пользователя, используется также как логин. */
     private String email;
@@ -68,6 +69,17 @@ public class User extends BaseEntity {
     public User(String email, String password) {
         this.email = email;
         this.password = password;
+    }
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, updatable = false)
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getEmail() {
