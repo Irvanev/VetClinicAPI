@@ -1,6 +1,6 @@
 package dev.clinic.mainservice.controllers;
 
-import dev.clinic.mainservice.dtos.*;
+import dev.clinic.mainservice.dtos.auth.*;
 import dev.clinic.mainservice.services.impl.AuthServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -10,8 +10,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 public class AuthController {
 
+    private final AuthServiceImpl authService;
+
     @Autowired
-    private AuthServiceImpl authService;
+    public AuthController(AuthServiceImpl authService) {
+        this.authService = authService;
+    }
 
     // Регистрация нового пользователя
     @PostMapping("/register")
@@ -27,7 +31,7 @@ public class AuthController {
         return ResponseEntity.ok("User verified successfully.");
     }
 
-    // Логин пользователя
+    // Авторизация пользователя
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody SignInRequest request) {
         AuthResponse response = authService.login(request);
