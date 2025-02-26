@@ -5,6 +5,9 @@ target/
 !**/src/test/**/target/
 .env
 .gradle
+/tools/docker/message-broker/rabbitmq_data/**
+/tools/docker/message-broker/rabbitmq_definitions.json
+gradle
 
 ### STS ###
 .apt_generated
