@@ -18,14 +18,27 @@ public class EmailListener {
         this.objectMapper = objectMapper;
     }
 
-    @RabbitListener(queues = "queueEmail")
-    public void receiveMessage(String message) {
+    @RabbitListener(queues = "queueVerificationCodeEmail")
+    public void receiveVerificationCodeMessage(String message) {
         try {
             System.out.println("Получено сообщение: " + message);
             Map<String, String> msgMap = objectMapper.readValue(message, Map.class);
             String email = msgMap.get("email");
             String verificationCode = msgMap.get("verificationCode");
             emailService.sendCustomVerificationEmail(email, verificationCode);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @RabbitListener(queues = "queuePasswordEmail")
+    public void receivePasswordMessage(String message) {
+        try {
+            System.out.println("Получено сообщение: " + message);
+            Map<String, String> msgMap = objectMapper.readValue(message, Map.class);
+            String email = msgMap.get("email");
+            String password = msgMap.get("password");
+            emailService.sendCustomPasswordEmail(email, password);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

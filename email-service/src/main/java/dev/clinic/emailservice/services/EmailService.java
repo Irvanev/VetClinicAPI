@@ -43,4 +43,28 @@ public class EmailService {
             e.printStackTrace();
         }
     }
+
+    public void sendCustomPasswordEmail(String toEmail, String password) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setFrom("irvvanevv@mail.ru");
+            helper.setTo(toEmail);
+            helper.setSubject("Подтверждение регистрации");
+
+            String content = "<html>"
+                    + "<body>"
+                    + "<h1>Добро пожаловать!</h1>"
+                    + "<p>Ваш временный пароль: <strong>" + password + "</strong></p>"
+                    + "<p>Спасибо за регистрацию в нашем сервисе. Приятной работы!</p>"
+                    + "</body>"
+                    + "</html>" ;
+
+            helper.setText(content, true);
+            mailSender.send(mimeMessage);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

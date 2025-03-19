@@ -12,10 +12,12 @@ import java.util.Map;
 @Service
 public class EmailMessageProducer {
 
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
-    static final String queueEmail = "queueEmail";
+    @Autowired
+    public EmailMessageProducer(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
     public void sendVerificationEmail(String email, String verificationCode) {
         try {
@@ -25,7 +27,21 @@ public class EmailMessageProducer {
             // Дополнительные параметры (тема, имя пользователя и т.д.) можно добавить здесь
             ObjectMapper mapper = new ObjectMapper();
             String jsonMessage = mapper.writeValueAsString(message);
-            rabbitTemplate.convertAndSend("exchange", "email.key", jsonMessage);
+            rabbitTemplate.convertAndSend("exchange", "emailVerificationCode.key", jsonMessage);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendPasswordEmail(String email, String password) {
+        try {
+            Map<String, String> message = new HashMap<>();
+            message.put("email", email);
+            message.put("password", password);
+            // Дополнительные параметры (тема, имя пользователя и т.д.) можно добавить здесь
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonMessage = mapper.writeValueAsString(message);
+            rabbitTemplate.convertAndSend("exchange", "emailPassword.key", jsonMessage);
         } catch (Exception e) {
             e.printStackTrace();
         }

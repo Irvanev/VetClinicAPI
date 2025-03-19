@@ -1,6 +1,7 @@
 package dev.clinic.mainservice.services.impl;
 
 import dev.clinic.mainservice.dtos.auth.*;
+import dev.clinic.mainservice.models.entities.Client;
 import dev.clinic.mainservice.models.entities.Role;
 import dev.clinic.mainservice.models.entities.User;
 import dev.clinic.mainservice.models.enums.RoleEnum;
@@ -63,20 +64,26 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     public void register(SignUpRequest signUpRequest) {
-        if (userRepository.existsByEmail(signUpRequest.getEmail())){
+        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             throw new IllegalArgumentException("User already exists");
         }
-        User user = modelMapper.map(signUpRequest, User.class);
-        user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
-        user.setEnabled(false);
+        if (!signUpRequest.getPassword().equals(signUpRequest.getConfirmPassword())) {
+            throw new IllegalArgumentException("Passwords do not match");
+        }
+        Client client = modelMapper.map(signUpRequest, Client.class);
+        client.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
+        client.setEnabled(false);
+
         String code = generateSixDigitCode();
-        user.setVerificationCode(code);
-        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
+        client.setVerificationCode(code);
+        client.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
+
         Role role = roleRepository.findByName(RoleEnum.User)
                 .orElseThrow(() -> new IllegalStateException("Default role not found"));
-        user.setRole(role);
-        userRepository.save(user);
-        emailService.sendVerificationEmail(user.getEmail(), code);
+        client.setRole(role);
+
+        userRepository.save(client);
+        emailService.sendVerificationEmail(client.getEmail(), code);
     }
 
     /**
@@ -102,7 +109,6 @@ public class AuthServiceImpl implements AuthService {
         user.setVerificationCodeExpiresAt(null);
         userRepository.save(user);
     }
-
 
     /**
      * Аутентификация пользователя и генерация access и refresh токенов.
