@@ -1,40 +1,66 @@
 package dev.clinic.mainservice.configs;
 
+import dev.clinic.mainservice.dtos.schedule.ScheduleRequest;
+import dev.clinic.mainservice.dtos.users.DoctorRequest;
+import dev.clinic.mainservice.models.entities.Doctor;
+import dev.clinic.mainservice.models.entities.Schedule;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.PropertyMap;
+import org.n52.jackson.datatype.jts.JtsModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 @Configuration
 public class BeanConfig {
+
     @Bean
     public ModelMapper modelMapper() {
-        return new ModelMapper();
+        ModelMapper modelMapper = new ModelMapper();
+
+        // Настраиваем маппинг для DoctorRequest -> Doctor
+        modelMapper.addMappings(new PropertyMap<DoctorRequest, Doctor>() {
+            @Override
+            protected void configure() {
+                // Игнорируем id, чтобы branchId не попадало в поле id доктора
+                skip(destination.getId());
+                // Игнорируем маппинг поля branch, т.к. оно будет устанавливаться вручную
+                skip(destination.getBranch());
+            }
+        });
+
+        modelMapper.addMappings(new PropertyMap<ScheduleRequest, Schedule>() {
+            @Override
+            protected void configure() {
+                skip(destination.getDoctor());
+            }
+        });
+
+        return modelMapper;
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Разрешаем запросы с указанных доменов
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://your-production-domain.com"));
-        // Разрешаем все методы
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Разрешаем любые заголовки
         configuration.setAllowedHeaders(Collections.singletonList("*"));
-        // Разрешаем отправку cookie и прочих учетных данных
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Применяем данную конфигурацию ко всем URL
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
+    @Bean
+    public JtsModule jtsModule() {
+        return new JtsModule();
+    }
+
 }

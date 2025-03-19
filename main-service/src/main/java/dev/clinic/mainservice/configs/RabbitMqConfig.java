@@ -6,13 +6,19 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMqConfig {
-    static final String queueEmail = "queueEmail";
+    static final String emailVerificationCodeQueue = "queueVerificationCodeEmail";
+    static final String emailPasswordQueue = "queuePasswordEmail";
 
     static final String exchangeName = "exchange";
 
     @Bean
-    public Queue emailQueue() {
-        return new Queue(queueEmail, false);
+    public Queue emailVerificationCodeQueue() {
+        return new Queue(emailVerificationCodeQueue, false);
+    }
+
+    @Bean
+    public Queue emailPasswordQueue() {
+        return new Queue(emailPasswordQueue, false);
     }
 
     @Bean
@@ -21,7 +27,12 @@ public class RabbitMqConfig {
     }
 
     @Bean
-    public Binding emailQueueBinding(Queue emailQueue, Exchange exchange) {
-        return BindingBuilder.bind(emailQueue).to(exchange).with("email.key").noargs();
+    public Binding emailVerificationCodeQueueBinding(Queue emailVerificationCodeQueue, Exchange exchange) {
+        return BindingBuilder.bind(emailVerificationCodeQueue).to(exchange).with("emailVerificationCode.key").noargs();
+    }
+
+    @Bean
+    public Binding emailPasswordQueueBinding(Queue emailPasswordQueue, Exchange exchange) {
+        return BindingBuilder.bind(emailPasswordQueue).to(exchange).with("emailPassword.key").noargs();
     }
 }

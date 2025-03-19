@@ -13,7 +13,7 @@ public class Schedule extends BaseEntity {
     private LocalTime startTime;
     private LocalTime endTime;
 
-    protected Schedule() {}
+    public Schedule() {}
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id", nullable = false)
