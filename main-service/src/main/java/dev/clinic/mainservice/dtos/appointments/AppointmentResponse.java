@@ -1,50 +1,41 @@
-package dev.clinic.mainservice.models.entities;
+package dev.clinic.mainservice.dtos.appointments;
 
 import dev.clinic.mainservice.models.enums.AppointmentStatus;
 import dev.clinic.mainservice.models.enums.AppointmentType;
-import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "appointments")
-public class Appointment extends BaseEntity {
-    private Doctor doctor;
-    private Client client;
-    private Pet pet;
+public class AppointmentResponse {
+    private Long id;
+    private Long doctorId;
+    private Long petId;
     private LocalDateTime appointmentDate;
     private AppointmentType appointmentType;
     private AppointmentStatus status;
     private String comments;
 
-    public Appointment() {}
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "doctor_id", nullable = false)
-    public Doctor getDoctor() {
-        return doctor;
-    }
-    public void setDoctor(Doctor doctor) {
-        this.doctor = doctor;
+    public Long getId() {
+        return id;
     }
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "client_id", nullable = false)
-    public Client getClient() {
-        return client;
-    }
-    public void setClient(Client client) {
-        this.client = client;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pet_id", nullable = false)
-    public Pet getPet() {
-        return pet;
+    public Long getDoctorId() {
+        return doctorId;
     }
 
-    public void setPet(Pet pet) {
-        this.pet = pet;
+    public void setDoctorId(Long doctorId) {
+        this.doctorId = doctorId;
+    }
+
+    public Long getPetId() {
+        return petId;
+    }
+
+    public void setPetId(Long petId) {
+        this.petId = petId;
     }
 
     public LocalDateTime getAppointmentDate() {
