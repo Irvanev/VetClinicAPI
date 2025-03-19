@@ -3,9 +3,11 @@ package dev.clinic.mainservice.models.entities;
 import dev.clinic.mainservice.models.enums.AnimalType;
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
+
 /**
  * Сущность Pet представляет питомца, принадлежащего пользователю(клиенту).
- * Содержит информацию об имени, возрасте, поле, весе, породе, цвете и типе животного.
+ * Содержит информацию об имени, породе и дате рождения.
  *
  * <p>Эта сущность связана с {@link User} через поле owner.</p>
  *
@@ -22,23 +24,11 @@ public class Pet extends BaseEntity {
     /** Имя питомца. */
     private String name;
 
-    /** Возраст питомца. */
-    private int age;
-
-    /** Пол питомца. */
-    private String gender;
-
-    /** Вес питомца. */
-    private String weight;
-
     /** Порода питомца. */
     private String breed;
 
-    /** Цвет питомца. */
-    private String color;
-
-    /** Тип животного (например, собака, кошка и т.д.). */
-    private AnimalType animalType;
+    /** Дата рождения питомца */
+    private LocalDate birthDate;
 
     /** Владелец питомца. */
     private User owner;
@@ -46,28 +36,21 @@ public class Pet extends BaseEntity {
     /**
      * Конструктор по умолчанию (требуется JPA).
      */
-    protected Pet() {}
+    public Pet() {}
 
     /**
      * Конструктор, создающий новый объект Pet с указанными параметрами.
      *
      * @param name имя питомца
-     * @param age возраст питомца
-     * @param gender пол питомца
-     * @param weight вес питомца
      * @param breed порода питомца
-     * @param color цвет питомца
-     * @param animalType тип животного
+     * @param birthDate дата рождения питомца
      * @param owner владелец питомца
      */
-    public Pet(String name, int age, String gender, String weight, String breed, String color, AnimalType animalType, User owner) {
+
+    public Pet(String name, String breed, LocalDate birthDate, User owner) {
         this.name = name;
-        this.age = age;
-        this.gender = gender;
-        this.weight = weight;
         this.breed = breed;
-        this.color = color;
-        this.animalType = animalType;
+        this.birthDate = birthDate;
         this.owner = owner;
     }
 
@@ -77,14 +60,6 @@ public class Pet extends BaseEntity {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public int getAge() {
-        return age;
-    }
-
-    public void setAge(int age) {
-        this.age = age;
     }
 
     @ManyToOne
@@ -97,22 +72,6 @@ public class Pet extends BaseEntity {
         this.owner = owner;
     }
 
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public String getWeight() {
-        return weight;
-    }
-
-    public void setWeight(String weight) {
-        this.weight = weight;
-    }
-
     public String getBreed() {
         return breed;
     }
@@ -121,19 +80,11 @@ public class Pet extends BaseEntity {
         this.breed = breed;
     }
 
-    public String getColor() {
-        return color;
+    public LocalDate getBirthDate() {
+        return birthDate;
     }
 
-    public void setColor(String color) {
-        this.color = color;
-    }
-
-    public AnimalType getAnimalType() {
-        return animalType;
-    }
-
-    public void setAnimalType(AnimalType animalType) {
-        this.animalType = animalType;
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
     }
 }

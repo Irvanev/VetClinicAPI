@@ -1,6 +1,7 @@
 package dev.clinic.mainservice.controllers;
 
 import dev.clinic.mainservice.dtos.pets.PetRequest;
+import dev.clinic.mainservice.dtos.pets.PetRequestAdmin;
 import dev.clinic.mainservice.dtos.pets.PetResponse;
 import dev.clinic.mainservice.services.PetService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,10 +40,30 @@ public class PetController {
     )
     @ApiResponse(responseCode = "201", description = "Питомец успешно создан")
     @ApiResponse(responseCode = "400", description = "Некорректные данные запроса")
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<PetResponse> createPet(
             @RequestBody @Parameter(description = "Данные питомца для создания") PetRequest petRequest) {
         PetResponse petResponse = petService.createPet(petRequest);
+        return new ResponseEntity<>(petResponse, HttpStatus.CREATED);
+    }
+
+    /**
+     * Создание нового питомца администратором.
+     * Питомец привязывается к хозяину по его почте.
+     *
+     * @param petRequest объект с данными питомца для создания
+     * @return созданный питомец
+     */
+    @Operation(
+            summary = "Создание питомца",
+            description = "Создает нового питомца и привязывает его к текущему пользователю."
+    )
+    @ApiResponse(responseCode = "201", description = "Питомец успешно создан")
+    @ApiResponse(responseCode = "400", description = "Некорректные данные запроса")
+    @PostMapping("/admin/create")
+    public ResponseEntity<PetResponse> createPetAdmin(
+            @RequestBody @Parameter(description = "Данные питомца для создания") PetRequestAdmin petRequest) {
+        PetResponse petResponse = petService.createPetAdmin(petRequest);
         return new ResponseEntity<>(petResponse, HttpStatus.CREATED);
     }
 
@@ -74,10 +95,34 @@ public class PetController {
             description = "Возвращает список всех питомцев."
     )
     @ApiResponse(responseCode = "200", description = "Список питомцев успешно получен")
-    @GetMapping
+    @GetMapping("/get-all-pets")
     public ResponseEntity<List<PetResponse>> getAllPets() {
-        List<PetResponse> petResponses = petService.getAllPets();
-        return ResponseEntity.ok(petResponses);
+        try {
+            List<PetResponse> petResponses = petService.getAllPets();
+            return ResponseEntity.ok(petResponses);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * Получение списка всех питомцев текущего пользователя.
+     *
+     * @return список питомцев
+     */
+    @Operation(
+            summary = "Получение списка питомцев текущего пользователя",
+            description = "Возвращает список всех питомцев текущего пользователя."
+    )
+    @ApiResponse(responseCode = "200", description = "Список питомцев успешно получен")
+    @GetMapping("/get-all-owner-pets")
+    public ResponseEntity<List<PetResponse>> getAllPetsByPrincipalOwner() {
+        try {
+            List<PetResponse> petResponses = petService.getAllPets();
+            return ResponseEntity.ok(petResponses);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
     }
 
     /**
@@ -87,6 +132,7 @@ public class PetController {
      * @param petRequest объект с обновленными данными питомца
      * @return обновленный питомец
      */
+
     @Operation(
             summary = "Редактирование питомца",
             description = "Обновляет информацию о питомце по его идентификатору."

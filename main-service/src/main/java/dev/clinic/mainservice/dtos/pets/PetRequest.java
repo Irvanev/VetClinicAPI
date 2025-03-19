@@ -1,15 +1,11 @@
 package dev.clinic.mainservice.dtos.pets;
 
-import dev.clinic.mainservice.models.enums.AnimalType;
+import java.time.LocalDate;
 
 public class PetRequest {
     private String name;
-    private int age;
-    private String gender;
-    private String weight;
+    private LocalDate birthDate;
     private String breed;
-    private String color;
-    private AnimalType animalType;
 
     public String getName() {
         return name;
@@ -19,28 +15,12 @@ public class PetRequest {
         this.name = name;
     }
 
-    public int getAge() {
-        return age;
+    public LocalDate getBirthDate() {
+        return birthDate;
     }
 
-    public void setAge(int age) {
-        this.age = age;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public String getWeight() {
-        return weight;
-    }
-
-    public void setWeight(String weight) {
-        this.weight = weight;
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
     }
 
     public String getBreed() {
@@ -49,21 +29,5 @@ public class PetRequest {
 
     public void setBreed(String breed) {
         this.breed = breed;
-    }
-
-    public String getColor() {
-        return color;
-    }
-
-    public void setColor(String color) {
-        this.color = color;
-    }
-
-    public AnimalType getAnimalType() {
-        return animalType;
-    }
-
-    public void setAnimalType(AnimalType animalType) {
-        this.animalType = animalType;
     }
 }
