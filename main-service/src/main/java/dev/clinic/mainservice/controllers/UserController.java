@@ -2,7 +2,6 @@ package dev.clinic.mainservice.controllers;
 
 import dev.clinic.mainservice.dtos.auth.ChangePasswordRequest;
 import dev.clinic.mainservice.dtos.users.DoctorRequest;
-import dev.clinic.mainservice.dtos.users.DoctorResponse;
 import dev.clinic.mainservice.dtos.users.DoctorResponseForSelectInAppointment;
 import dev.clinic.mainservice.dtos.users.UserResponse;
 import dev.clinic.mainservice.services.UserService;

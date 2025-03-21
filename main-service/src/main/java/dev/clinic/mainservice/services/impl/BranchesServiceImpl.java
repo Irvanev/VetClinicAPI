@@ -2,13 +2,16 @@ package dev.clinic.mainservice.services.impl;
 
 import dev.clinic.mainservice.dtos.branches.BranchRequest;
 import dev.clinic.mainservice.dtos.branches.BranchResponse;
+import dev.clinic.mainservice.mapping.AppointmentMapper;
 import dev.clinic.mainservice.mapping.BranchMapper;
+import dev.clinic.mainservice.models.entities.Appointment;
 import dev.clinic.mainservice.models.entities.Branches;
 import dev.clinic.mainservice.repositories.BranchesRepository;
 import dev.clinic.mainservice.services.BranchesService;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class BranchesServiceImpl implements BranchesService {
@@ -18,6 +21,12 @@ public class BranchesServiceImpl implements BranchesService {
     @Autowired
     public BranchesServiceImpl(BranchesRepository branchesRepository) {
         this.branchesRepository = branchesRepository;
+    }
+
+    @Override
+    public List<BranchResponse> getAllBranches() {
+        List<Branches> branches = branchesRepository.findAll();
+        return BranchMapper.toResponseList(branches);
     }
 
     @Override

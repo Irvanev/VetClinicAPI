@@ -87,4 +87,13 @@ public class AppointmentMapper {
                 .map(AppointmentMapper::toResponseOwner)
                 .collect(Collectors.toList());
     }
+
+    public static List<AppointmentResponse> toResponseList(List<Appointment> appointments) {
+        if (appointments == null) {
+            return Collections.emptyList();
+        }
+        return appointments.stream()
+                .map(AppointmentMapper::toResponse)
+                .collect(Collectors.toList());
+    }
 }

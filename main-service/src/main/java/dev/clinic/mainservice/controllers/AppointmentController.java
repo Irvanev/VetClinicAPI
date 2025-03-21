@@ -43,7 +43,12 @@ public class AppointmentController {
     @PostMapping("/create-appointment")
     public ResponseEntity<AppointmentResponse> createAppointment(
             @RequestBody @Parameter(description = "Данные приема для создания") AppointmentRequest appointment) {
-        return new ResponseEntity<>(appointmentService.createAppointment(appointment), HttpStatus.CREATED);
+        try {
+            appointmentService.createAppointment(appointment);
+            return new ResponseEntity<>(appointmentService.createAppointment(appointment), HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
     }
 
     /**
@@ -61,7 +66,11 @@ public class AppointmentController {
     @GetMapping("/get-appointment/{id}")
     public ResponseEntity<AppointmentResponse> getAppointment(
             @PathVariable @Parameter(description = "Идентификатор приема") Long id) {
-        return new ResponseEntity<>(appointmentService.getAppointmentById(id), HttpStatus.OK);
+        try {
+            return new ResponseEntity<>(appointmentService.getAppointmentById(id), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
     }
 
     /**
@@ -77,6 +86,10 @@ public class AppointmentController {
     @ApiResponse(responseCode = "404", description = "Приемы не найдены")
     @GetMapping("/get-all-appointments-owner")
     public ResponseEntity<List<AppointmentResponseOwner>> getAllAppointmentsOwner() {
-        return new ResponseEntity<>(appointmentService.getAllOwnerAppointments(), HttpStatus.OK);
+        try {
+            return new ResponseEntity<>(appointmentService.getAllOwnerAppointments(), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
     }
 }

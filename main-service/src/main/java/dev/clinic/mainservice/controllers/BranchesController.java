@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/branches")
 public class BranchesController {
@@ -17,6 +19,15 @@ public class BranchesController {
     @Autowired
     public BranchesController(BranchesService branchesService) {
         this.branchesService = branchesService;
+    }
+
+    @GetMapping("/get-all-branches")
+    public ResponseEntity<List<BranchResponse>> getAllBranches() {
+        try {
+            return new ResponseEntity<>(branchesService.getAllBranches(), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/create-branch")

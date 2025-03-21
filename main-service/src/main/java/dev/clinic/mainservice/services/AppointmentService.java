@@ -10,6 +10,8 @@ public interface AppointmentService {
     AppointmentResponse createAppointment(AppointmentRequest appointmentRequest);
     AppointmentResponse getAppointmentById(Long id);
     List<AppointmentResponseOwner> getAllOwnerAppointments();
-    List<AppointmentResponse> getAllAppointmentsByOwnerId(Long ownerId);
+    List<AppointmentResponseOwner> getAllAppointmentsByOwnerId(Long ownerId);
     List<AppointmentResponse> getAllAppointments();
+
+    // реалищзовтаь запрос по дате посещения по убыванию
 }

@@ -81,12 +81,17 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public List<AppointmentResponse> getAllAppointmentsByOwnerId(Long ownerId) {
-        return List.of();
+    public List<AppointmentResponseOwner> getAllAppointmentsByOwnerId(Long ownerId) {
+        Client client = clientRepository.findById(ownerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + ownerId));
+
+        List<Appointment> appointments = appointmentRepository.findAllByClientId(client.getId());
+        return AppointmentMapper.toResponseOwnerList(appointments);
     }
 
     @Override
     public List<AppointmentResponse> getAllAppointments() {
-        return List.of();
+        List<Appointment> appointments = appointmentRepository.findAll();
+        return AppointmentMapper.toResponseList(appointments);
     }
 }

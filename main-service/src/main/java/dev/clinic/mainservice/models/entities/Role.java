@@ -25,14 +25,10 @@ import java.util.List;
 @Entity
 public class Role extends BaseEntity {
 
-    /**
-     * Название роли, представленное в виде перечисления {@link RoleEnum}.
-     */
+    /** Название роли, представленное в виде перечисления {@link RoleEnum}. */
     private RoleEnum name;
 
-    /**
-     * Список пользователей, имеющих данную роль.
-     */
+    /** Список пользователей, имеющих данную роль. */
     private List<User> users;
 
     @Enumerated(EnumType.STRING)
