@@ -30,11 +30,20 @@ public class Pet extends BaseEntity {
     /** Дата рождения питомца */
     private LocalDate birthDate;
 
+    /** Тип питомца */
+    private String animalType;
+
+    /** Фото питомца */
+    private String photoUrl;
+
+    /** Миниатюрное фото питомца */
+    private String thumbnailUrl;
+
     /** Владелец питомца. */
     private User owner;
 
     /**
-     * Конструктор по умолчанию (требуется JPA).
+     * Конструктор по умолчанию.
      */
     public Pet() {}
 
@@ -86,5 +95,29 @@ public class Pet extends BaseEntity {
 
     public void setBirthDate(LocalDate birthDate) {
         this.birthDate = birthDate;
+    }
+
+    public String getAnimalType() {
+        return animalType;
+    }
+
+    public void setAnimalType(String animalType) {
+        this.animalType = animalType;
+    }
+
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
     }
 }

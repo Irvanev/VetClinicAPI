@@ -49,6 +49,12 @@ public abstract class User {
     /** Дата и время истечения срока действия кода подтверждения. */
     private LocalDateTime verificationCodeExpiresAt;
 
+    /** Фото пользователя */
+    private String photoUrl;
+
+    /** Миниатюрное фото пользователя */
+    private String thumbnailUrl;
+
     /** Список питомцев, принадлежащих пользователю. */
     private List<Pet> pets;
 
@@ -153,5 +159,21 @@ public abstract class User {
     }
     public void setVerificationCodeExpiresAt(LocalDateTime verificationCodeExpiresAt) {
         this.verificationCodeExpiresAt = verificationCodeExpiresAt;
+    }
+
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
     }
 }

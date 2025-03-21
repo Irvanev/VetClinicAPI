@@ -17,13 +17,25 @@ import java.util.List;
  */
 @Entity
 public class Branches extends BaseEntity {
-    private String address;
-    private String phone;
-    private String email;
-    private Point coordinates; // !TODO
 
+    /** Адрес филиала */
+    private String address;
+
+    /** Номер телефона филиала */
+    private String phone;
+
+    /** Почта филиала */
+    private String email;
+
+    /** Координаты филиала */
+    private Point coordinates;
+
+    /** Список врачей, которые закреплены под филиалом */
     private List<Doctor> doctors;
 
+    /**
+     * Конструктор по умолчанию, необходимый для работы JPA.
+     */
     public Branches() {}
 
     public String getAddress() {

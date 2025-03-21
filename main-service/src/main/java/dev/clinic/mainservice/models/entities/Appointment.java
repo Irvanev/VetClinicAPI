@@ -6,17 +6,45 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Сущность {@code Appointment} представляет информацию об приемах.
+ * <p>
+ * Данный класс хранит общую информацию о приемах, такие как
+ * врач, к которому был записан клиент, клиент, питомец, время проведения приема,
+ * тип приема, статус, описание.
+ * </p>
+ *
+ * @author Irvanev
+ * @version 1.0
+ */
 @Entity
 @Table(name = "appointments")
 public class Appointment extends BaseEntity {
+
+    /** Врач, который будет проводить прием */
     private Doctor doctor;
+
+    /** Клиент, который записался на прием */
     private Client client;
+
+    /** Питомец, который записан на прием */
     private Pet pet;
+
+    /** Время проведения приема */
     private LocalDateTime appointmentDate;
+
+    /** Тип приема */
     private AppointmentType appointmentType;
+
+    /** Статус приема */
     private AppointmentStatus status;
+
+    /** Описание (доп. информация к приему) */
     private String comments;
 
+    /**
+     * Конструктор по умолчанию, необходимый для работы JPA.
+     */
     public Appointment() {}
 
     @ManyToOne(fetch = FetchType.LAZY)
