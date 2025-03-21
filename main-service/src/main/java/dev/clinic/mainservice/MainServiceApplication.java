@@ -14,28 +14,4 @@ public class MainServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(MainServiceApplication.class, args);
     }
-
-//    @Bean
-//    public CommandLineRunner initializeRoles(RoleRepository roleRepository) {
-//        return args -> {
-//            roleRepository.findByName(RoleEnum.User).orElseGet(() -> {
-//                Role userRole = new Role();
-//                userRole.setName(RoleEnum.User);
-//                return roleRepository.save(userRole);
-//            });
-//
-//            roleRepository.findByName(RoleEnum.Doctor).orElseGet(() -> {
-//                Role adminRole = new Role();
-//                adminRole.setName(RoleEnum.Admin);
-//                return roleRepository.save(adminRole);
-//            });
-//
-//            roleRepository.findByName(RoleEnum.Admin).orElseGet(() -> {
-//                Role adminRole = new Role();
-//                adminRole.setName(RoleEnum.Admin);
-//                return roleRepository.save(adminRole);
-//            });
-//        };
-//    }
-
 }

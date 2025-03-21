@@ -8,6 +8,7 @@ target/
 /tools/docker/message-broker/rabbitmq_data/**
 /tools/docker/message-broker/rabbitmq_definitions.json
 gradle
+/tools/docker/database/pgdata
 
 ### STS ###
 .apt_generated

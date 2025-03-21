@@ -8,8 +8,8 @@ RUN gradle clean build -x test
 FROM openjdk:17
 WORKDIR /app
 
-COPY --from=build /app/build/libs/*.jar /app/email-service.jar
+COPY --from=build /app/build/libs/*.jar /app/main-service.jar
 
-EXPOSE 8081
+EXPOSE 8080
 
-CMD ["java", "-jar", "email-service.jar"]
+CMD ["java", "-jar", "main-service.jar"]
