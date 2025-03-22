@@ -10,7 +10,7 @@ RUN gradle clean build -x test
 FROM openjdk:17
 WORKDIR /app
 
-COPY --from=build /app/build/libs/*.jar /app/main-service.jar
+COPY --from=build /app/build/libs/main-service.jar /app/main-service.jar
 
 EXPOSE 8080
 
