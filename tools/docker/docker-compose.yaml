@@ -1,6 +1,7 @@
 version: "3.8"
 
 services:
+  # --- Postgres with PostGIS ---
   postgres:
     image: postgis/postgis:latest
     container_name: postgres
@@ -14,6 +15,7 @@ services:
       - ./db-init:/docker-entrypoint-initdb.d
       - ./pgdata:/var/lib/postgresql/data
 
+  # --- pgAdmin ---
   pgadmin:
     image: dpage/pgadmin4:6.21
     container_name: pgadmin
@@ -26,8 +28,10 @@ services:
     depends_on:
       - postgres
 
+  # --- RabbitMQ ---
   rabbitmq:
     image: rabbitmq:3-management
+    container_name: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -38,6 +42,48 @@ services:
       - ./rabbitmq_data:/var/lib/rabbitmq
       - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
 
+  # --- Redis ---
+  redis:
+    image: "redis:latest"
+    ports:
+      - "6379:6379"
+
+  # --- Logstash ---
+  logstash:
+    image: logstash:7.17.0
+    container_name: logstash
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./logs/vet-clinic.log:/app/logs/vet-clinic.log
+    ports:
+      - "5000:5000"
+    depends_on:
+      - elasticsearch
+
+  # --- Elasticsearch ---
+  elasticsearch:
+    image: elasticsearch:8.8.0
+    container_name: elasticsearch
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+
+  # --- Kibana ---
+  kibana:
+    image: kibana:8.8.0
+    container_name: kibana
+    environment:
+      - 'ELASTICSEARCH_HOSTS=["http://elasticsearch:9200"]'
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+
+  # --- Main Service ---
   main-service:
     build:
       context: ../../main-service
@@ -52,6 +98,7 @@ services:
     ports:
       - "8080:8080"
 
+  # --- Email Service ---
   email-service:
     build:
       context: ../../email-service
@@ -63,7 +110,3 @@ services:
         condition: service_started
     ports:
       - "8081:8081"
-
-networks:
-  logging-network:
-    driver: bridge

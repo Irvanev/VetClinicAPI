@@ -1,6 +1,8 @@
 FROM gradle:8-jdk17 AS build
 WORKDIR /app
 
+RUN mkdir -p logs
+
 COPY . /app
 
 RUN gradle clean build -x test
