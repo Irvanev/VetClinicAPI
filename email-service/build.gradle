@@ -13,12 +13,6 @@ java {
 	}
 }
 
-jar {
-	archiveBaseName.set('email-service')
-	archiveVersion.set('') // Without version
-	archiveClassifier.set('')
-}
-
 repositories {
 	mavenCentral()
 }
