@@ -3,7 +3,7 @@ WORKDIR /app
 
 COPY . /app
 
-RUN /gradlew clean build -x test
+RUN gradle clean build -x test
 
 FROM openjdk:17
 WORKDIR /app

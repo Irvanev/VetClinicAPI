@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # --- Postgres with PostGIS ---
   postgres:
@@ -24,7 +22,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
-      - "8888:80"
+      - "5050:80"
     depends_on:
       - postgres
 
@@ -40,7 +38,7 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBIT_MQ_PASSWORD}
     volumes:
       - ./rabbitmq_data:/var/lib/rabbitmq
-      - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
+#      - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
 
   # --- Redis ---
   redis:
@@ -54,7 +52,7 @@ services:
     container_name: logstash
     volumes:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-      - ./logs/vet-clinic.log:/app/logs/vet-clinic.log
+      - ./logs/vetclinic.log:/app/logs/vetclinic.log
     ports:
       - "5000:5000"
     depends_on:
@@ -77,7 +75,7 @@ services:
     image: kibana:8.8.0
     container_name: kibana
     environment:
-      - 'ELASTICSEARCH_HOSTS=["http://elasticsearch:9200"]'
+      - ELASTICSEARCH_HOSTS=["http://elasticsearch:9200"]
     ports:
       - "5601:5601"
     depends_on:
@@ -90,10 +88,16 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ../../.env
+    volumes:
+      - ./logs/vetclinic.log:/app/logs/vetclinic.log
     depends_on:
       postgres:
         condition: service_started
       rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      logstash:
         condition: service_started
     ports:
       - "8080:8080"
