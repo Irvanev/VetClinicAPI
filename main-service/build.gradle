@@ -18,26 +18,31 @@ repositories {
 }
 
 dependencies {
+    // Spring Boot starters
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.modelmapper:modelmapper:3.2.0'
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
-    implementation 'org.hibernate.orm:hibernate-spatial:6.6.11.Final'
-    implementation 'org.n52.jackson:jackson-datatype-jts:1.2.10'
 
+    implementation 'org.modelmapper:modelmapper:3.2.0'
+    implementation 'org.hibernate.orm:hibernate-spatial:6.6.11.Final'
+
+    // JSON dependencies
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    implementation 'org.n52.jackson:jackson-datatype-jts:1.2.10'
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.amqp:spring-rabbit-test'
-
+    // DB dependencies
     runtimeOnly 'org.postgresql:postgresql'
 
+    // Testing dependencies
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.amqp:spring-rabbit-test'
 }
 
 tasks.named('test') {

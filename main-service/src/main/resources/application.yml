@@ -1,33 +1,19 @@
+spring:
+  application:
+    name: "main-service"
+
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - classpath:application-db.yml
+      - classpath:application-mb.yml
+      - classpath:application-redis.yml
+      - classpath:application-swagger.yml
+
 jwt:
   secret: ${JWT_SECRET_KEY}
   access-token-validity: ${JWT_ACCESS_TIME}
   refresh-token-validity: ${JWT_REFRESH_TIME}
-spring:
-  config:
-    import: optional:file:.env[.properties]
-  application:
-    name: main-service
-  rabbitmq:
-    host: ${RABBIT_MQ_HOST}
-    username: ${RABBIT_MQ_USERNAME}
-    password: ${RABBIT_MQ_PASSWORD}
-    virtual-host: ${RABBIT_MQ_VHOST}
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    hikari:
-      initialization-fail-timeout: -1
-      connection-timeout: 30000
-  jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-        show_sql: true
-    hibernate:
-      ddl-auto: update
 
 logging:
   level:
