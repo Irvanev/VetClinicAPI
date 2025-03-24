@@ -5,12 +5,15 @@ import dev.clinic.mainservice.dtos.auth.RefreshRequest;
 import dev.clinic.mainservice.dtos.auth.SignInRequest;
 import dev.clinic.mainservice.dtos.auth.SignUpRequest;
 import dev.clinic.mainservice.dtos.auth.VerifyRequest;
+import dev.clinic.mainservice.dtos.users.UserDetailResponse;
 import dev.clinic.mainservice.services.impl.AuthServiceImpl;
+import dev.clinic.mainservice.services.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,10 +23,12 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthServiceImpl authService;
+    private final UserServiceImpl userService;
 
     @Autowired
-    public AuthController(AuthServiceImpl authService) {
+    public AuthController(AuthServiceImpl authService, UserServiceImpl userService) {
         this.authService = authService;
+        this.userService = userService;
     }
 
     /**
@@ -104,5 +109,14 @@ public class AuthController {
             @Parameter(description = "Refresh токен") RefreshRequest request) {
         AuthResponse response = authService.refresh(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/user-context")
+    public ResponseEntity<UserDetailResponse> getPrincipalUser() {
+        try {
+            return ResponseEntity.ok(userService.getPrincipalUser());
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+        }
     }
 }

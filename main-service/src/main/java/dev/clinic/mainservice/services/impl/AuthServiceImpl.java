@@ -11,6 +11,7 @@ import dev.clinic.mainservice.security.JwtTokenProvider;
 import dev.clinic.mainservice.services.AuthService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +30,12 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
     private final ModelMapper modelMapper;
+
+    @Value("${jwt.access-token-validity}")
+    private int accessTokenValidityInMillis;
+
+    @Value("${jwt.refresh-token-validity}")
+    private int refreshTokenValidityInMillis;
 
     @Autowired
     public AuthServiceImpl(
@@ -122,19 +129,19 @@ public class AuthServiceImpl implements AuthService {
         var authentication = authenticationManager.authenticate(authToken);
 
         var userDetails = (org.springframework.security.core.userdetails.UserDetails) authentication.getPrincipal();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         String role = userDetails.getAuthorities().iterator().next().getAuthority();
 
         String accessToken = tokenProvider.generateAccessToken(email, role);
         String refreshToken = tokenProvider.generateRefreshToken(email, role);
 
-        return new AuthResponse(accessToken, refreshToken);
+        return new AuthResponse(user.getId(), accessToken, refreshToken, accessTokenValidityInMillis, refreshTokenValidityInMillis);
     }
 
     /**
      * Обновление access токена по refresh токену.
      */
-    @Override
     public AuthResponse refresh(RefreshRequest refreshRequest) {
         String providedRefreshToken = refreshRequest.getRefreshToken();
 
@@ -151,6 +158,8 @@ public class AuthServiceImpl implements AuthService {
         String newAccessToken = tokenProvider.generateAccessToken(email, role);
         String newRefreshToken = tokenProvider.generateRefreshToken(email, role);
 
-        return new AuthResponse(newAccessToken, newRefreshToken);
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return new AuthResponse(user.getId(), newAccessToken, newRefreshToken, accessTokenValidityInMillis, refreshTokenValidityInMillis);
     }
 }

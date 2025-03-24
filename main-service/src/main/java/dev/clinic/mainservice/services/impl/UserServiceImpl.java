@@ -4,6 +4,7 @@ import dev.clinic.mainservice.dtos.auth.ChangePasswordRequest;
 import dev.clinic.mainservice.dtos.pets.PetResponse;
 import dev.clinic.mainservice.dtos.users.DoctorRequest;
 import dev.clinic.mainservice.dtos.users.DoctorResponseForSelectInAppointment;
+import dev.clinic.mainservice.dtos.users.UserDetailResponse;
 import dev.clinic.mainservice.dtos.users.UserResponse;
 import dev.clinic.mainservice.exceptions.ResourceNotFoundException;
 import dev.clinic.mainservice.models.entities.*;
@@ -35,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final BranchesRepository branchesRepository;
     private final DoctorRepository doctorRepository;
+    private final ClientRepository clientRepository;
 
     @Autowired
     public UserServiceImpl(
@@ -43,7 +45,7 @@ public class UserServiceImpl implements UserService {
             EmailMessageProducer emailService,
             ModelMapper modelMapper,
             PasswordEncoder passwordEncoder,
-            BranchesRepository branchesRepository, DoctorRepository doctorRepository) {
+            BranchesRepository branchesRepository, DoctorRepository doctorRepository, ClientRepository clientRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.emailService = emailService;
@@ -51,6 +53,7 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
         this.branchesRepository = branchesRepository;
         this.doctorRepository = doctorRepository;
+        this.clientRepository = clientRepository;
     }
 
 
@@ -82,6 +85,18 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByPetsId(petId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with pet id: " + petId));
         return modelMapper.map(user, UserResponse.class);
+    }
+
+    @Override
+    public UserDetailResponse getPrincipalUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            throw new ResourceNotFoundException("User isn't authenticated");
+        }
+        String ownerEmail = authentication.getName();
+        Client client = clientRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + ownerEmail));
+        return modelMapper.map(client, UserDetailResponse.class);
     }
 
     @Override
