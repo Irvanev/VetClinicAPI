@@ -1,9 +1,11 @@
 package dev.clinic.mainservice.mapping;
 
+import dev.clinic.mainservice.dtos.appointments.AppointmentAdminRequest;
 import dev.clinic.mainservice.dtos.appointments.AppointmentRequest;
 import dev.clinic.mainservice.dtos.appointments.AppointmentResponse;
 import dev.clinic.mainservice.dtos.appointments.AppointmentResponseOwner;
 import dev.clinic.mainservice.models.entities.Appointment;
+import dev.clinic.mainservice.models.entities.Client;
 import dev.clinic.mainservice.models.entities.Doctor;
 import dev.clinic.mainservice.models.entities.Pet;
 
@@ -26,6 +28,31 @@ public class AppointmentMapper {
         Pet pet = new Pet();
         pet.setId(request.getPetId());
         appointment.setPet(pet);
+
+        appointment.setAppointmentDate(request.getAppointmentDate());
+        appointment.setAppointmentType(request.getAppointmentType());
+        appointment.setComments(request.getComments());
+
+        return appointment;
+    }
+
+    public static Appointment fromAdminRequest(AppointmentAdminRequest request) {
+        if (request == null) {
+            return null;
+        }
+        Appointment appointment = new Appointment();
+
+        Doctor doctor = new Doctor();
+        doctor.setId(request.getDoctorId());
+        appointment.setDoctor(doctor);
+
+        Pet pet = new Pet();
+        pet.setId(request.getPetId());
+        appointment.setPet(pet);
+
+        Client owner = new Client();
+        owner.setId(request.getClintId());
+        appointment.setClient(owner);
 
         appointment.setAppointmentDate(request.getAppointmentDate());
         appointment.setAppointmentType(request.getAppointmentType());

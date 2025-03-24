@@ -3,6 +3,7 @@ package dev.clinic.mainservice.models.entities;
 import jakarta.persistence.*;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
@@ -32,6 +33,9 @@ public class Schedule extends BaseEntity {
 
     /** Время окончания рабочего дня */
     private LocalTime endTime;
+
+    /** Дата рабочего дня */
+    private LocalDate date;
 
     /**
      * Конструктор по умолчанию, необходимый для работы JPA.
@@ -71,5 +75,13 @@ public class Schedule extends BaseEntity {
 
     public void setEndTime(LocalTime endTime) {
         this.endTime = endTime;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 }

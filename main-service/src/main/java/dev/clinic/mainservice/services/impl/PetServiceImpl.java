@@ -83,7 +83,7 @@ public class PetServiceImpl implements PetService {
 
         // Проверяем, имеет ли пользователь роль ADMIN
         boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(auth -> auth.getAuthority().equals("Admin"));
 
         // Если пользователь не администратор, проверяем, что он является владельцем питомца
         if (!isAdmin && !pet.getOwner().getEmail().equals(userEmail)) {

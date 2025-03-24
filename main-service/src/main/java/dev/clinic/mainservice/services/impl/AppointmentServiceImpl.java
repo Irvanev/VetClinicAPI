@@ -1,5 +1,6 @@
 package dev.clinic.mainservice.services.impl;
 
+import dev.clinic.mainservice.dtos.appointments.AppointmentAdminRequest;
 import dev.clinic.mainservice.dtos.appointments.AppointmentRequest;
 import dev.clinic.mainservice.dtos.appointments.AppointmentResponse;
 import dev.clinic.mainservice.dtos.appointments.AppointmentResponseOwner;
@@ -13,6 +14,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,7 +29,12 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final DoctorRepository doctorRepository;
 
     @Autowired
-    public AppointmentServiceImpl(AppointmentRepository appointmentRepository, PetRepository petRepository, ClientRepository clientRepository, DoctorRepository doctorRepository) {
+    public AppointmentServiceImpl(
+            AppointmentRepository appointmentRepository,
+            PetRepository petRepository,
+            ClientRepository clientRepository,
+            DoctorRepository doctorRepository
+    ) {
         this.appointmentRepository = appointmentRepository;
         this.petRepository = petRepository;
         this.clientRepository = clientRepository;
@@ -58,6 +68,26 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         return AppointmentMapper.toResponse(appointment);
     }
+
+    @Override
+    public AppointmentResponse createAppointmentAdmin(AppointmentAdminRequest appointmentAdminRequest) {
+        Client owner = clientRepository.findById(appointmentAdminRequest.getClintId())
+                .orElseThrow(() -> new ResourceNotFoundException("Owner not found with email: " + appointmentAdminRequest.getClintId()));
+        Pet pet = petRepository.findById(appointmentAdminRequest.getPetId())
+                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + appointmentAdminRequest.getPetId()));
+        Doctor doctor = doctorRepository.findById(appointmentAdminRequest.getDoctorId())
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + appointmentAdminRequest.getDoctorId()));
+
+        Appointment appointment = AppointmentMapper.fromAdminRequest(appointmentAdminRequest);
+        appointment.setClient(owner);
+        appointment.setPet(pet);
+        appointment.setDoctor(doctor);
+
+        appointment = appointmentRepository.saveAndFlush(appointment);
+
+        return AppointmentMapper.toResponse(appointment);
+    }
+
 
     @Override
     public AppointmentResponse getAppointmentById(Long id) {
