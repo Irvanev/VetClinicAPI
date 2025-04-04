@@ -21,3 +21,8 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springdoc: DEBUG
     io.swagger.v3: DEBUG
+
+minio:
+  endpoint: ${MINIO_URL}
+  access-key: ${MINIO_USERNAME}
+  secret-key: ${MINIO_PASSWORD}

@@ -12,6 +12,20 @@ services:
     volumes:
       - ./db-init:/docker-entrypoint-initdb.d
       - ./pgdata:/var/lib/postgresql/data
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    volumes:
+      - minio-storage:/data
+      - minio-config:/root/.minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USERNAME}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
 
   # --- pgAdmin ---
   pgadmin:
@@ -114,3 +128,7 @@ services:
         condition: service_started
     ports:
       - "8081:8081"
+volumes:
+  minio-storage:
+  minio-config:
+

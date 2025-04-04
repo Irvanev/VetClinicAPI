@@ -26,6 +26,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
+    implementation 'io.minio:minio:8.5.17'
+    implementation 'net.coobird:thumbnailator:0.4.18'
 
     implementation 'org.modelmapper:modelmapper:3.2.0'
     implementation 'org.hibernate.orm:hibernate-spatial:6.6.11.Final'
