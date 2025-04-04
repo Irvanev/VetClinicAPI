@@ -9,13 +9,14 @@ import java.time.LocalDateTime;
 public class MedicalRecords extends BaseEntity {
     private Pet pet;
     private Appointment appointment;
-    private User doctor;
+    private Doctor doctor;
+    private Client client;
     private LocalDateTime recordDate;
     private String diagnosis;
     private String treatment;  // лечение
     private String notes;
 
-    protected MedicalRecords() {}
+    public MedicalRecords() {}
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pet_id", nullable = false)
@@ -39,12 +40,22 @@ public class MedicalRecords extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id", nullable = false)
-    public User getDoctor() {
+    public Doctor getDoctor() {
         return doctor;
     }
 
-    public void setDoctor(User doctor) {
+    public void setDoctor(Doctor doctor) {
         this.doctor = doctor;
+    }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id", nullable = false)
+    public Client getClient() {
+        return client;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
     }
 
     public LocalDateTime getRecordDate() {
