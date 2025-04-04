@@ -8,16 +8,21 @@ import dev.clinic.mainservice.models.entities.Pet;
 import dev.clinic.mainservice.models.entities.User;
 import dev.clinic.mainservice.repositories.PetRepository;
 import dev.clinic.mainservice.repositories.UserRepository;
+import dev.clinic.mainservice.services.ImageUploaderService;
 import dev.clinic.mainservice.services.PetService;
 import jakarta.persistence.EntityNotFoundException;
+import org.hibernate.service.spi.ServiceException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,19 +31,26 @@ public class PetServiceImpl implements PetService {
     private final ModelMapper modelMapper;
     private final PetRepository petRepository;
     private final UserRepository userRepository;
+    private final ImageUploaderService imageUploaderService;
 
     @Autowired
-    public PetServiceImpl(ModelMapper modelMapper, PetRepository petRepository, UserRepository userRepository) {
+    public PetServiceImpl(
+            ModelMapper modelMapper,
+            PetRepository petRepository,
+            UserRepository userRepository,
+            ImageUploaderService imageUploaderService
+    ) {
         this.modelMapper = modelMapper;
         this.petRepository = petRepository;
         this.userRepository = userRepository;
+        this.imageUploaderService = imageUploaderService;
     }
 
     @Override
-    public PetResponse createPet(PetRequest petRequest) {
-
+    public PetResponse createPet(PetRequest petRequest, MultipartFile photo) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+        if (authentication == null || !authentication.isAuthenticated() ||
+                "anonymousUser".equals(authentication.getPrincipal())) {
             throw new ResourceNotFoundException("User isn't authenticated");
         }
         String ownerEmail = authentication.getName();
@@ -49,6 +61,19 @@ public class PetServiceImpl implements PetService {
         Pet pet = modelMapper.map(petRequest, Pet.class);
         pet.setOwner(owner);
 
+        if (photo != null && !photo.isEmpty()) {
+            try {
+                if (!Objects.requireNonNull(photo.getContentType()).startsWith("image/")) {
+                    throw new IllegalArgumentException("Invalid file type. Only images are allowed");
+                }
+
+                String newPhotoUrl = imageUploaderService.uploadImage(photo);
+                pet.setPhotoUrl(newPhotoUrl);
+
+            } catch (IOException | RuntimeException ex) {
+                throw new ServiceException("Image processing failed", ex);
+            }
+        }
 
         Pet savedPet = petRepository.save(pet);
         return modelMapper.map(savedPet, PetResponse.class);
@@ -69,11 +94,9 @@ public class PetServiceImpl implements PetService {
 
     @Override
     public PetResponse getPetById(Long id) {
-        // Находим питомца по id
         Pet pet = petRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + id));
 
-        // Получаем аутентификационные данные текущего пользователя
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() ||
                 authentication.getPrincipal().equals("anonymousUser")) {
@@ -81,11 +104,9 @@ public class PetServiceImpl implements PetService {
         }
         String userEmail = authentication.getName();
 
-        // Проверяем, имеет ли пользователь роль ADMIN
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("Admin"));
 
-        // Если пользователь не администратор, проверяем, что он является владельцем питомца
         if (!isAdmin && !pet.getOwner().getEmail().equals(userEmail)) {
             throw new AccessDeniedException("Access denied: you are not allowed to view this pet");
         }
@@ -119,11 +140,9 @@ public class PetServiceImpl implements PetService {
 
     @Override
     public PetResponse editPet(Long id, PetRequest petRequest) {
-        // Получаем питомца по id
         Pet pet = petRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + id));
 
-        // Получаем данные об аутентифицированном пользователе
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() ||
                 authentication.getPrincipal().equals("anonymousUser")) {
@@ -131,16 +150,13 @@ public class PetServiceImpl implements PetService {
         }
         String userEmail = authentication.getName();
 
-        // Проверяем, имеет ли пользователь роль ADMIN
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
 
-        // Если пользователь не администратор, проверяем, что он является владельцем питомца
         if (!isAdmin && !pet.getOwner().getEmail().equals(userEmail)) {
             throw new AccessDeniedException("Access denied: you are not allowed to edit this pet");
         }
 
-        // Выполняем обновление данных питомца
         modelMapper.map(petRequest, pet);
         Pet updatedPet = petRepository.save(pet);
         return modelMapper.map(updatedPet, PetResponse.class);
@@ -148,22 +164,18 @@ public class PetServiceImpl implements PetService {
 
     @Override
     public boolean deletePet(Long id) {
-        // Получаем питомца по id
         Pet pet = petRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + id));
 
-        // Получаем информацию об аутентифицированном пользователе
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
             throw new ResourceNotFoundException("User isn't authenticated");
         }
         String userEmail = authentication.getName();
 
-        // Проверяем, имеет ли пользователь роль ADMIN
         boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+                .anyMatch(auth -> auth.getAuthority().equals("Admin"));
 
-        // Если пользователь не администратор, проверяем, что он является владельцем питомца
         if (!isAdmin && !pet.getOwner().getEmail().equals(userEmail)) {
             throw new AccessDeniedException("Access denied: you are not allowed to delete this pet");
         }

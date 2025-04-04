@@ -8,16 +8,18 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/pets")
-@Tag(name = "Питомцы", description = "Контроллер для управления питомцами")
+@Tag(name = "Питомцы", description = "Управление питомцами")
 public class PetController {
 
     private final PetService petService;
@@ -27,146 +29,121 @@ public class PetController {
         this.petService = petService;
     }
 
-    /**
-     * Создание нового питомца.
-     * Питомец привязывается к текущему пользователю (хозяину).
-     *
-     * @param petRequest объект с данными питомца для создания
-     * @return созданный питомец
-     */
     @Operation(
-            summary = "Создание питомца",
-            description = "Создает нового питомца и привязывает его к текущему пользователю."
+            summary = "Создание питомца (владельцем)",
+            description = "Создаёт нового питомца и привязывает его к текущему пользователю",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Питомец успешно создан"),
+                    @ApiResponse(responseCode = "400", description = "Некорректные данные")
+            }
     )
-    @ApiResponse(responseCode = "201", description = "Питомец успешно создан")
-    @ApiResponse(responseCode = "400", description = "Некорректные данные запроса")
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<PetResponse> createPet(
-            @RequestBody @Parameter(description = "Данные питомца для создания") PetRequest petRequest) {
-        PetResponse petResponse = petService.createPet(petRequest);
-        return new ResponseEntity<>(petResponse, HttpStatus.CREATED);
+            @Parameter(description = "Данные питомца", required = true)
+            @RequestPart("pet") @Valid PetRequest petRequest,
+
+            @Parameter(description = "Фото питомца", required = false)
+            @RequestPart(value = "photo", required = false) MultipartFile photo
+    ) {
+        PetResponse response = petService.createPet(petRequest, photo);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    /**
-     * Создание нового питомца администратором.
-     * Питомец привязывается к хозяину по его почте.
-     *
-     * @param petRequest объект с данными питомца для создания
-     * @return созданный питомец
-     */
     @Operation(
-            summary = "Создание питомца",
-            description = "Создает нового питомца и привязывает его к текущему пользователю."
+            summary = "Создание питомца (администратором)",
+            description = "Создаёт нового питомца и привязывает его к пользователю по email",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Питомец успешно создан"),
+                    @ApiResponse(responseCode = "400", description = "Некорректные данные")
+            }
     )
-    @ApiResponse(responseCode = "201", description = "Питомец успешно создан")
-    @ApiResponse(responseCode = "400", description = "Некорректные данные запроса")
-    @PostMapping("/admin/create")
+    @PostMapping("/admin")
     public ResponseEntity<PetResponse> createPetAdmin(
-            @RequestBody @Parameter(description = "Данные питомца для создания") PetRequestAdmin petRequest) {
-        PetResponse petResponse = petService.createPetAdmin(petRequest);
-        return new ResponseEntity<>(petResponse, HttpStatus.CREATED);
+            @Parameter(description = "Данные питомца от администратора", required = true)
+            @Valid @RequestBody PetRequestAdmin petRequest
+    ) {
+        PetResponse response = petService.createPetAdmin(petRequest);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    /**
-     * Получение питомца по его идентификатору.
-     *
-     * @param id идентификатор питомца
-     * @return найденный питомец
-     */
     @Operation(
             summary = "Получение питомца по ID",
-            description = "Возвращает информацию о питомце по его идентификатору."
+            description = "Возвращает информацию о питомце по его идентификатору",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Питомец найден"),
+                    @ApiResponse(responseCode = "404", description = "Питомец не найден")
+            }
     )
-    @ApiResponse(responseCode = "200", description = "Питомец найден")
-    @ApiResponse(responseCode = "404", description = "Питомец не найден")
     @GetMapping("/{id}")
-    public PetResponse getPetById(
-            @PathVariable @Parameter(description = "Идентификатор питомца") Long id) {
-        return petService.getPetById(id);
+    public ResponseEntity<PetResponse> getPetById(
+            @Parameter(description = "ID питомца", required = true)
+            @PathVariable Long id
+    ) {
+        PetResponse response = petService.getPetById(id);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    /**
-     * Получение списка всех питомцев.
-     *
-     * @return список питомцев
-     */
     @Operation(
-            summary = "Получение списка питомцев",
-            description = "Возвращает список всех питомцев."
+            summary = "Получение всех питомцев",
+            description = "Возвращает список всех питомцев в системе",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Список получен")
+            }
     )
-    @ApiResponse(responseCode = "200", description = "Список питомцев успешно получен")
-    @GetMapping("/get-all-pets")
+    @GetMapping
     public ResponseEntity<List<PetResponse>> getAllPets() {
-        try {
-            List<PetResponse> petResponses = petService.getAllPets();
-            return ResponseEntity.ok(petResponses);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
+        List<PetResponse> responses = petService.getAllPets();
+        return new ResponseEntity<>(responses, HttpStatus.OK);
     }
 
-    /**
-     * Получение списка всех питомцев текущего пользователя.
-     *
-     * @return список питомцев
-     */
     @Operation(
-            summary = "Получение списка питомцев текущего пользователя",
-            description = "Возвращает список всех питомцев текущего пользователя."
+            summary = "Получение питомцев текущего пользователя",
+            description = "Возвращает всех питомцев, принадлежащих текущему пользователю",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Список питомцев успешно получен"),
+                    @ApiResponse(responseCode = "404", description = "Питомцы не найдены")
+            }
     )
-    @ApiResponse(responseCode = "200", description = "Список питомцев успешно получен")
-    @GetMapping("/get-all-owner-pets")
+    @GetMapping("/owner")
     public ResponseEntity<List<PetResponse>> getAllPetsByPrincipalOwner() {
-        try {
-            List<PetResponse> petResponses = petService.getAllPets();
-            return ResponseEntity.ok(petResponses);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
+        List<PetResponse> responses = petService.getAllPets();
+        return new ResponseEntity<>(responses, HttpStatus.OK);
     }
 
-    /**
-     * Редактирование информации о питомце.
-     *
-     * @param id идентификатор питомца
-     * @param petRequest объект с обновленными данными питомца
-     * @return обновленный питомец
-     */
-
     @Operation(
-            summary = "Редактирование питомца",
-            description = "Обновляет информацию о питомце по его идентификатору."
+            summary = "Редактировать питомца",
+            description = "Обновляет информацию о питомце по ID",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Питомец обновлён"),
+                    @ApiResponse(responseCode = "404", description = "Питомец не найден")
+            }
     )
-    @ApiResponse(responseCode = "200", description = "Питомец успешно обновлен")
-    @ApiResponse(responseCode = "404", description = "Питомец не найден")
     @PutMapping("/{id}")
     public ResponseEntity<PetResponse> editPet(
-            @PathVariable @Parameter(description = "Идентификатор питомца") Long id,
-            @RequestBody @Parameter(description = "Обновленные данные питомца") PetRequest petRequest) {
-        try {
-            PetResponse petResponse = petService.editPet(id, petRequest);
-            return ResponseEntity.ok(petResponse);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
+            @Parameter(description = "ID питомца", required = true)
+            @PathVariable Long id,
+
+            @Parameter(description = "Обновлённые данные питомца", required = true)
+            @Valid @RequestBody PetRequest petRequest
+    ) {
+        PetResponse response = petService.editPet(id, petRequest);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    /**
-     * Удаление питомца.
-     *
-     * @param id идентификатор питомца
-     * @return статус успешного удаления
-     */
     @Operation(
-            summary = "Удаление питомца",
-            description = "Удаляет питомца по его идентификатору."
+            summary = "Удалить питомца",
+            description = "Удаляет питомца по его идентификатору",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Питомец успешно удалён"),
+                    @ApiResponse(responseCode = "404", description = "Питомец не найден")
+            }
     )
-    @ApiResponse(responseCode = "204", description = "Питомец успешно удален")
-    @ApiResponse(responseCode = "404", description = "Питомец не найден")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePet(
-            @PathVariable @Parameter(description = "Идентификатор питомца") Long id) {
+            @Parameter(description = "ID питомца", required = true)
+            @PathVariable Long id
+    ) {
         petService.deletePet(id);
-        return ResponseEntity.noContent().build();
+        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
     }
 }

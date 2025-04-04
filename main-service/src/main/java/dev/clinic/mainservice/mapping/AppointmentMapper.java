@@ -8,53 +8,49 @@ import dev.clinic.mainservice.models.entities.Appointment;
 import dev.clinic.mainservice.models.entities.Client;
 import dev.clinic.mainservice.models.entities.Doctor;
 import dev.clinic.mainservice.models.entities.Pet;
+import dev.clinic.mainservice.models.enums.AppointmentStatus;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.time.Duration;
 
 public class AppointmentMapper {
 
-    public static Appointment fromRequest(AppointmentRequest request) {
-        if (request == null) {
+    public static Appointment fromRequest(AppointmentRequest request, Client client, Pet pet, Doctor doctor) {
+        if (request == null || client == null || pet == null || doctor == null) {
             return null;
         }
+
         Appointment appointment = new Appointment();
 
-        Doctor doctor = new Doctor();
-        doctor.setId(request.getDoctorId());
+        Duration duration = request.getAppointmentType().getDuration();
+
         appointment.setDoctor(doctor);
-
-        Pet pet = new Pet();
-        pet.setId(request.getPetId());
         appointment.setPet(pet);
-
+        appointment.setClient(client);
         appointment.setAppointmentDate(request.getAppointmentDate());
+        appointment.setAppointmentStartTime(request.getAppointmentStartTime());
+        appointment.setAppointmentEndTime(request.getAppointmentStartTime().plus(duration));
         appointment.setAppointmentType(request.getAppointmentType());
         appointment.setComments(request.getComments());
+        appointment.setStatus(AppointmentStatus.SCHEDULED);
 
         return appointment;
     }
 
-    public static Appointment fromAdminRequest(AppointmentAdminRequest request) {
-        if (request == null) {
+    public static Appointment fromAdminRequest(AppointmentAdminRequest request, Client client, Pet pet, Doctor doctor) {
+        if (request == null || client == null || pet == null || doctor == null) {
             return null;
         }
+
         Appointment appointment = new Appointment();
 
-        Doctor doctor = new Doctor();
-        doctor.setId(request.getDoctorId());
+        Duration duration = request.getAppointmentType().getDuration();
+
         appointment.setDoctor(doctor);
-
-        Pet pet = new Pet();
-        pet.setId(request.getPetId());
         appointment.setPet(pet);
-
-        Client owner = new Client();
-        owner.setId(request.getClintId());
-        appointment.setClient(owner);
-
+        appointment.setClient(client);
         appointment.setAppointmentDate(request.getAppointmentDate());
+        appointment.setAppointmentStartTime(request.getAppointmentStartTime());
+        appointment.setAppointmentEndTime(request.getAppointmentStartTime().plus(duration));
         appointment.setAppointmentType(request.getAppointmentType());
         appointment.setComments(request.getComments());
 
@@ -65,16 +61,23 @@ public class AppointmentMapper {
         if (appointment == null) {
             return null;
         }
-        Doctor doctor = appointment.getDoctor();
-        Pet pet = appointment.getPet();
 
         AppointmentResponse response = new AppointmentResponse();
+
         response.setId(appointment.getId());
-        response.setDoctorId(doctor.getId());
-        response.setPetId(pet.getId());
+
+        if (appointment.getDoctor() != null) {
+            response.setDoctorId(appointment.getDoctor().getId());
+        }
+
+        if (appointment.getPet() != null) {
+            response.setPetId(appointment.getPet().getId());
+        }
+
         response.setAppointmentDate(appointment.getAppointmentDate());
-        response.setAppointmentType(appointment.getAppointmentType());
-        response.setStatus(appointment.getStatus());
+        response.setAppointmentStartTime(appointment.getAppointmentStartTime());
+        response.setAppointmentType(appointment.getAppointmentType().getName());
+        response.setStatus(appointment.getStatus().getName());
         response.setComments(appointment.getComments());
 
         return response;
@@ -84,43 +87,26 @@ public class AppointmentMapper {
         if (appointment == null) {
             return null;
         }
+
         AppointmentResponseOwner response = new AppointmentResponseOwner();
+
         response.setId(appointment.getId());
 
         if (appointment.getDoctor() != null) {
             response.setDoctorId(appointment.getDoctor().getId());
-            response.setDoctorName(appointment.getDoctor().getFullName()); // или getName(), если поле называется иначе
+            response.setDoctorName(appointment.getDoctor().getFirstName() + " " + appointment.getDoctor().getLastName());
         }
 
         if (appointment.getPet() != null) {
             response.setPetId(appointment.getPet().getId());
-            response.setPetName(appointment.getPet().getName()); // убедитесь, что у Pet есть поле name
+            response.setPetName(appointment.getPet().getName());
         }
 
         response.setAppointmentDate(appointment.getAppointmentDate());
-        response.setAppointmentType(appointment.getAppointmentType());
-        response.setStatus(appointment.getStatus());
+        response.setAppointmentType(appointment.getAppointmentType().getName());
+        response.setStatus(appointment.getStatus().getName());
         response.setComments(appointment.getComments());
 
         return response;
-    }
-
-    // Преобразование списка Appointment в список AppointmentResponseOwner
-    public static List<AppointmentResponseOwner> toResponseOwnerList(List<Appointment> appointments) {
-        if (appointments == null) {
-            return Collections.emptyList();
-        }
-        return appointments.stream()
-                .map(AppointmentMapper::toResponseOwner)
-                .collect(Collectors.toList());
-    }
-
-    public static List<AppointmentResponse> toResponseList(List<Appointment> appointments) {
-        if (appointments == null) {
-            return Collections.emptyList();
-        }
-        return appointments.stream()
-                .map(AppointmentMapper::toResponse)
-                .collect(Collectors.toList());
     }
 }

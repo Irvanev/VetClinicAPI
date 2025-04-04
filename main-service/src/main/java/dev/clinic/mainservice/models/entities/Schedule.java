@@ -25,9 +25,6 @@ public class Schedule extends BaseEntity {
     /** Доктор, к которому данное расписание привязано */
     private User doctor;
 
-    /** День недели */
-    private DayOfWeek dayOfWeek;
-
     /** Время начала рабочего дня */
     private LocalTime startTime;
 
@@ -50,15 +47,6 @@ public class Schedule extends BaseEntity {
 
     public void setDoctor(User doctor) {
         this.doctor = doctor;
-    }
-
-    @Enumerated(EnumType.STRING)
-    public DayOfWeek getDayOfWeek() {
-        return dayOfWeek;
-    }
-
-    public void setDayOfWeek(DayOfWeek dayOfWeek) {
-        this.dayOfWeek = dayOfWeek;
     }
 
     public LocalTime getStartTime() {

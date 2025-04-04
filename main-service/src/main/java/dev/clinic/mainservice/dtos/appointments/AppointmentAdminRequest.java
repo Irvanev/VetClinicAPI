@@ -2,13 +2,16 @@ package dev.clinic.mainservice.dtos.appointments;
 
 import dev.clinic.mainservice.models.enums.AppointmentType;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public class AppointmentAdminRequest {
     private Long doctorId;
     private Long petId;
     private Long clintId;
-    private LocalDateTime appointmentDate;
+    private LocalDate appointmentDate;
+    private LocalTime appointmentStartTime;
     private AppointmentType appointmentType;
     private String comments;
 
@@ -36,12 +39,20 @@ public class AppointmentAdminRequest {
         this.clintId = clintId;
     }
 
-    public LocalDateTime getAppointmentDate() {
+    public LocalDate getAppointmentDate() {
         return appointmentDate;
     }
 
-    public void setAppointmentDate(LocalDateTime appointmentDate) {
+    public void setAppointmentDate(LocalDate appointmentDate) {
         this.appointmentDate = appointmentDate;
+    }
+
+    public LocalTime getAppointmentStartTime() {
+        return appointmentStartTime;
+    }
+
+    public void setAppointmentStartTime(LocalTime appointmentStartTime) {
+        this.appointmentStartTime = appointmentStartTime;
     }
 
     public AppointmentType getAppointmentType() {

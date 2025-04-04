@@ -28,8 +28,11 @@ public abstract class User {
     /** Электронная почта пользователя, используется также как логин. */
     private String email;
 
-    /** Полное имя пользователя. */
-    private String fullName;
+    /** Имя пользователя. */
+    private String firstName;
+
+    /** Фамилия пользователя. */
+    private String lastName;
 
     /** Номер телефона пользователя. */
     private String numberPhone;
@@ -95,11 +98,18 @@ public abstract class User {
         this.email = email;
     }
 
-    public String getFullName() {
-        return fullName;
+    public String getFirstName() {
+        return firstName;
     }
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getNumberPhone() {
@@ -164,7 +174,6 @@ public abstract class User {
     public String getPhotoUrl() {
         return photoUrl;
     }
-
     public void setPhotoUrl(String photoUrl) {
         this.photoUrl = photoUrl;
     }
@@ -172,7 +181,6 @@ public abstract class User {
     public String getThumbnailUrl() {
         return thumbnailUrl;
     }
-
     public void setThumbnailUrl(String thumbnailUrl) {
         this.thumbnailUrl = thumbnailUrl;
     }

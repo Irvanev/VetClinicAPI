@@ -17,7 +17,7 @@ public class ScheduleMapper {
         doctor.setId(request.getDoctorId());
         schedule.setDoctor(doctor);
 
-        schedule.setDayOfWeek(request.getDayOfWeek());
+        schedule.setDate(request.getDate());
         schedule.setStartTime(request.getStartTime());
         schedule.setEndTime(request.getEndTime());
 
@@ -35,7 +35,7 @@ public class ScheduleMapper {
             response.setDoctorId(schedule.getDoctor().getId());
         }
 
-        response.setDayOfWeek(schedule.getDayOfWeek());
+        response.setDate(schedule.getDate());
         response.setStartTime(schedule.getStartTime());
         response.setEndTime(schedule.getEndTime());
 

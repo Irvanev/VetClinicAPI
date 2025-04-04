@@ -2,7 +2,8 @@ package dev.clinic.mainservice.dtos.users;
 
 public class UserDetailResponse {
     private Long id;
-    private String fullName;
+    private String firstName;
+    private String lastName;
     private String photoUrl;
     private String email;
     private boolean enabled;
@@ -10,23 +11,27 @@ public class UserDetailResponse {
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
 
-    public String getFullName() {
-        return fullName;
+    public String getFirstName() {
+        return firstName;
+    }
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public String getLastName() {
+        return lastName;
+    }
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getPhotoUrl() {
         return photoUrl;
     }
-
     public void setPhotoUrl(String photoUrl) {
         this.photoUrl = photoUrl;
     }
@@ -34,7 +39,6 @@ public class UserDetailResponse {
     public String getEmail() {
         return email;
     }
-
     public void setEmail(String email) {
         this.email = email;
     }
@@ -42,7 +46,6 @@ public class UserDetailResponse {
     public boolean isEnabled() {
         return enabled;
     }
-
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }

@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@Tag(name = "Аутентификация", description = "Эндпоинты для регистрации, верификации, авторизации и обновления токенов")
+@Tag(name = "Аутентификация", description = "Управление регистрацией, входом, верификацией и обновлением токенов")
 public class AuthController {
 
     private final AuthServiceImpl authService;
@@ -31,92 +32,85 @@ public class AuthController {
         this.userService = userService;
     }
 
-    /**
-     * Регистрация нового пользователя.
-     *
-     * @param request объект SignUpRequest, содержащий email, пароль и полное имя пользователя.
-     * @return Сообщение о том, что регистрация инициирована и проверьте email для получения кода верификации.
-     */
     @Operation(
-            summary = "Регистрация пользователя",
-            description = "Создает нового пользователя и отправляет код подтверждения на email для верификации."
+            summary = "Регистрация нового пользователя",
+            description = "Создаёт нового пользователя и отправляет код подтверждения на email.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Регистрация успешно инициирована"),
+                    @ApiResponse(responseCode = "400", description = "Некорректные данные или пользователь уже существует")
+            }
     )
-    @ApiResponse(responseCode = "200", description = "Регистрация успешно инициирована.")
-    @ApiResponse(responseCode = "400", description = "Некорректные данные регистрации или пользователь уже существует.")
     @PostMapping("/register")
     public ResponseEntity<String> register(
-            @RequestBody
-            @Parameter(description = "Данные для регистрации (email, пароль, полное имя)") SignUpRequest request) {
+            @Parameter(description = "Данные для регистрации", required = true)
+            @Valid @RequestBody SignUpRequest request
+    ) {
         authService.register(request);
-        return ResponseEntity.ok("Registration initiated. Check your email for verification code.");
+        return new ResponseEntity<>("Registration initiated. Check your email for verification code.", HttpStatus.CREATED);
     }
 
-    /**
-     * Верификация email (2FA).
-     *
-     * @param request объект VerifyRequest, содержащий email и код верификации.
-     * @return Сообщение об успешной верификации.
-     */
     @Operation(
-            summary = "Верификация email",
-            description = "Подтверждает email пользователя с помощью кода, отправленного на email."
+            summary = "Верификация пользователя",
+            description = "Подтверждает email пользователя по полученному коду.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Пользователь успешно верифицирован"),
+                    @ApiResponse(responseCode = "400", description = "Неверный или просроченный код верификации")
+            }
     )
-    @ApiResponse(responseCode = "200", description = "Пользователь успешно верифицирован.")
-    @ApiResponse(responseCode = "400", description = "Некорректный код верификации или истек срок его действия.")
     @PostMapping("/verify")
     public ResponseEntity<String> verify(
-            @RequestBody
-            @Parameter(description = "Данные для верификации (email, код)") VerifyRequest request) {
+            @Parameter(description = "Данные для верификации", required = true)
+            @Valid @RequestBody VerifyRequest request
+    ) {
         authService.verify(request);
-        return ResponseEntity.ok("User verified successfully.");
+        return new ResponseEntity<>("User verified successfully.", HttpStatus.OK);
     }
 
-    /**
-     * Авторизация пользователя.
-     *
-     * @param request объект SignInRequest, содержащий email и пароль.
-     * @return Объект AuthResponse с access и refresh токенами.
-     */
     @Operation(
             summary = "Авторизация пользователя",
-            description = "Выполняет проверку учетных данных пользователя и возвращает JWT access и refresh токены."
+            description = "Проверяет учетные данные и возвращает JWT access и refresh токены.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Авторизация прошла успешно"),
+                    @ApiResponse(responseCode = "401", description = "Неверные учетные данные")
+            }
     )
-    @ApiResponse(responseCode = "200", description = "Авторизация успешна. Возвращает access и refresh токены.")
-    @ApiResponse(responseCode = "401", description = "Неверные учетные данные.")
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
-            @RequestBody
-            @Parameter(description = "Данные для входа (email и пароль)") SignInRequest request) {
+            @Parameter(description = "Данные для входа", required = true)
+            @Valid @RequestBody SignInRequest request
+    ) {
         AuthResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    /**
-     * Обновление access токена по refresh токену.
-     *
-     * @param request объект RefreshRequest, содержащий refresh токен.
-     * @return Объект AuthResponse с новым access и refresh токенами.
-     */
     @Operation(
-            summary = "Обновление токена",
-            description = "Использует refresh токен для генерации нового access токена и обновления refresh токена."
+            summary = "Обновление токенов",
+            description = "Генерирует новый access токен на основе refresh токена.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Токены успешно обновлены"),
+                    @ApiResponse(responseCode = "400", description = "Неверный или недействительный refresh токен")
+            }
     )
-    @ApiResponse(responseCode = "200", description = "Токены успешно обновлены.")
-    @ApiResponse(responseCode = "400", description = "Недействительный или неправильный refresh токен.")
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(
-            @RequestBody
-            @Parameter(description = "Refresh токен") RefreshRequest request) {
+            @Parameter(description = "Данные с refresh токеном", required = true)
+            @Valid @RequestBody RefreshRequest request
+    ) {
         AuthResponse response = authService.refresh(request);
-        return ResponseEntity.ok(response);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/user-context")
+    @Operation(
+            summary = "Получить информацию о текущем пользователе",
+            description = "Возвращает данные пользователя, основываясь на текущем контексте безопасности.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Успешное получение данных"),
+                    @ApiResponse(responseCode = "401", description = "Пользователь не авторизован")
+            }
+    )
+    @GetMapping("/user")
     public ResponseEntity<UserDetailResponse> getPrincipalUser() {
-        try {
-            return ResponseEntity.ok(userService.getPrincipalUser());
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
-        }
+        UserDetailResponse response = userService.getPrincipalUser();
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

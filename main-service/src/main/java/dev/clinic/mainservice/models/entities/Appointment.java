@@ -4,7 +4,9 @@ import dev.clinic.mainservice.models.enums.AppointmentStatus;
 import dev.clinic.mainservice.models.enums.AppointmentType;
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * Сущность {@code Appointment} представляет информацию об приемах.
@@ -30,13 +32,24 @@ public class Appointment extends BaseEntity {
     /** Питомец, который записан на прием */
     private Pet pet;
 
-    /** Время проведения приема */
-    private LocalDateTime appointmentDate;
+    /** Дата проведения приема */
+    @Column(name = "appointment_date", nullable = false)
+    private LocalDate appointmentDate;
+
+    /** Время начала приема */
+    @Column(name = "appointment_start_time", nullable = false)
+    private LocalTime appointmentStartTime;
+
+    /** Время окончания приема */
+    @Column(name = "appointment_end_time", nullable = false)
+    private LocalTime appointmentEndTime;
 
     /** Тип приема */
+    @Enumerated(EnumType.STRING)
     private AppointmentType appointmentType;
 
     /** Статус приема */
+    @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
 
     /** Описание (доп. информация к приему) */
@@ -75,12 +88,28 @@ public class Appointment extends BaseEntity {
         this.pet = pet;
     }
 
-    public LocalDateTime getAppointmentDate() {
+    public LocalDate getAppointmentDate() {
         return appointmentDate;
     }
 
-    public void setAppointmentDate(LocalDateTime appointmentDate) {
+    public void setAppointmentDate(LocalDate appointmentDate) {
         this.appointmentDate = appointmentDate;
+    }
+
+    public LocalTime getAppointmentStartTime() {
+        return appointmentStartTime;
+    }
+
+    public void setAppointmentStartTime(LocalTime appointmentStartTime) {
+        this.appointmentStartTime = appointmentStartTime;
+    }
+
+    public LocalTime getAppointmentEndTime() {
+        return appointmentEndTime;
+    }
+
+    public void setAppointmentEndTime(LocalTime appointmentEndTime) {
+        this.appointmentEndTime = appointmentEndTime;
     }
 
     public AppointmentType getAppointmentType() {

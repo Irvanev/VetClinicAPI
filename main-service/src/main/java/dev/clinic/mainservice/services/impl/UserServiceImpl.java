@@ -2,18 +2,19 @@ package dev.clinic.mainservice.services.impl;
 
 import dev.clinic.mainservice.dtos.auth.ChangePasswordRequest;
 import dev.clinic.mainservice.dtos.pets.PetResponse;
-import dev.clinic.mainservice.dtos.users.DoctorRequest;
-import dev.clinic.mainservice.dtos.users.DoctorResponseForSelectInAppointment;
-import dev.clinic.mainservice.dtos.users.UserDetailResponse;
-import dev.clinic.mainservice.dtos.users.UserResponse;
+import dev.clinic.mainservice.dtos.users.*;
 import dev.clinic.mainservice.exceptions.ResourceNotFoundException;
+import dev.clinic.mainservice.mapping.UsersMapper;
 import dev.clinic.mainservice.models.entities.*;
 import dev.clinic.mainservice.models.enums.RoleEnum;
 import dev.clinic.mainservice.repositories.*;
+import dev.clinic.mainservice.services.ImageUploaderService;
 import dev.clinic.mainservice.services.UserService;
+import org.hibernate.service.spi.ServiceException;
 import org.modelmapper.ModelMapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -21,8 +22,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -37,6 +41,7 @@ public class UserServiceImpl implements UserService {
     private final BranchesRepository branchesRepository;
     private final DoctorRepository doctorRepository;
     private final ClientRepository clientRepository;
+    private final ImageUploaderService imageUploaderService;
 
     @Autowired
     public UserServiceImpl(
@@ -45,7 +50,11 @@ public class UserServiceImpl implements UserService {
             EmailMessageProducer emailService,
             ModelMapper modelMapper,
             PasswordEncoder passwordEncoder,
-            BranchesRepository branchesRepository, DoctorRepository doctorRepository, ClientRepository clientRepository) {
+            BranchesRepository branchesRepository,
+            DoctorRepository doctorRepository,
+            ClientRepository clientRepository,
+            ImageUploaderService imageUploaderService
+    ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.emailService = emailService;
@@ -54,6 +63,7 @@ public class UserServiceImpl implements UserService {
         this.branchesRepository = branchesRepository;
         this.doctorRepository = doctorRepository;
         this.clientRepository = clientRepository;
+        this.imageUploaderService = imageUploaderService;
     }
 
 
@@ -61,7 +71,7 @@ public class UserServiceImpl implements UserService {
     public Page<UserResponse> getAllUsers(Pageable pageable) {
         Page<User> usersPage = userRepository.findAll(pageable);
         List<UserResponse> userResponses = usersPage.getContent().stream()
-                .map(user -> modelMapper.map(user, UserResponse.class))
+                .map(UsersMapper::toResponse)
                 .collect(Collectors.toList());
         return new PageImpl<>(userResponses, pageable, usersPage.getTotalElements());
     }
@@ -165,5 +175,50 @@ public class UserServiceImpl implements UserService {
         return doctorRepository.findAllByBranchId(branchId).stream()
                 .map(user -> modelMapper.map(user, DoctorResponseForSelectInAppointment.class))
                 .collect(Collectors.toList());
+    }
+
+    public UserResponse editClientByAdmin(EditClientRequest request, Long clientId, MultipartFile photo) {
+        if (clientId == null || clientId <= 0) {
+            throw new IllegalArgumentException("Invalid client ID");
+        }
+
+        if (request == null) {
+            throw new IllegalArgumentException("Request cannot be null");
+        }
+
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
+
+        String oldPhotoUrl = client.getPhotoUrl();
+
+        UsersMapper.fromRequest(request);
+
+        if (photo != null && !photo.isEmpty()) {
+            try {
+                if (!Objects.requireNonNull(photo.getContentType()).startsWith("image/")) {
+                    throw new IllegalArgumentException("Invalid file type. Only images are allowed");
+                }
+
+                String newPhotoUrl = imageUploaderService.uploadImage(photo);
+                client.setPhotoUrl(newPhotoUrl);
+
+                if (oldPhotoUrl != null && !oldPhotoUrl.isEmpty()) {
+                    try {
+                        imageUploaderService.deleteImage(oldPhotoUrl);
+                    } catch (Exception e) {
+                        throw new ResourceNotFoundException("Image upload failed");
+                    }
+                }
+            } catch (IOException | RuntimeException ex) {
+                throw new ServiceException("Image processing failed", ex);
+            }
+        }
+
+        try {
+            Client updatedClient = clientRepository.save(client);
+            return modelMapper.map(updatedClient, UserResponse.class);
+        } catch (DataAccessException ex) {
+            throw new ServiceException("Error saving client data", ex);
+        }
     }
 }

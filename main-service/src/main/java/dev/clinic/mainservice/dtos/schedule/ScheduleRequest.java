@@ -1,11 +1,12 @@
 package dev.clinic.mainservice.dtos.schedule;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class ScheduleRequest {
     private Long doctorId;
-    private DayOfWeek dayOfWeek;
+    private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
 
@@ -17,12 +18,12 @@ public class ScheduleRequest {
         this.doctorId = doctorId;
     }
 
-    public DayOfWeek getDayOfWeek() {
-        return dayOfWeek;
+    public LocalDate getDate() {
+        return date;
     }
 
-    public void setDayOfWeek(DayOfWeek dayOfWeek) {
-        this.dayOfWeek = dayOfWeek;
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 
     public LocalTime getStartTime() {
