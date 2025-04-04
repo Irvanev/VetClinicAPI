@@ -1,48 +1,70 @@
 package dev.clinic.mainservice.exceptions;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-    /**
-     * (404 Error)
-     */
+
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Object> handleUserNotFound(ResourceNotFoundException ex) {
-        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    public ResponseEntity<AppError> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
+        return buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
     }
 
-    /**
-     * (400 Error)
-     */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Object> handleBadRequest(IllegalArgumentException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    public ResponseEntity<AppError> handleBadRequest(IllegalArgumentException ex, HttpServletRequest request) {
+        return buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
     }
 
-    /**
-     * (500 Internal Server Error)
-     */
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<AppError> handleForbidden(ForbiddenException ex, HttpServletRequest request) {
+        return buildError(HttpStatus.FORBIDDEN, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<AppError> handleUnauthorized(UnauthorizedException ex, HttpServletRequest request) {
+        return buildError(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<AppError> handleDatabase(DataAccessException ex, HttpServletRequest request) {
+        return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Database error occurred", request.getRequestURI());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<AppError> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        String message = "Invalid value for parameter '" + ex.getName() + "': " + ex.getValue();
+        return buildError(HttpStatus.BAD_REQUEST, message, request.getRequestURI());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<AppError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        String errorMessage = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .findFirst()
+                .orElse("Validation error");
+        return buildError(HttpStatus.BAD_REQUEST, errorMessage, request.getRequestURI());
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleGlobalException(Exception ex) {
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error " + ex.getMessage());
+    public ResponseEntity<AppError> handleAllUnhandled(Exception ex, HttpServletRequest request) {
+        return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred: " + ex.getMessage(), request.getRequestURI());
     }
 
-    /**
-     * Response
-     */
-    private ResponseEntity<Object> buildResponse(HttpStatus status, String message) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("status", status.value());
-        body.put("error", status.getReasonPhrase());
-        body.put("message", message);
-
-        return new ResponseEntity<>(body, status);
+    private ResponseEntity<AppError> buildError(HttpStatus status, String message, String path) {
+        AppError error = new AppError(
+                status.value(),
+                message,
+                path,
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(error, status);
     }
 }
