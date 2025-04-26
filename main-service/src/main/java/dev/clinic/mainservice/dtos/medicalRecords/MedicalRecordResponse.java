@@ -2,7 +2,7 @@ package dev.clinic.mainservice.dtos.medicalRecords;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Сущность для отображения посещения")
+@Schema(description = "Получение медицинской записи")
 public class MedicalRecordResponse {
     private Long id;
     private Long doctorId;
@@ -13,7 +13,7 @@ public class MedicalRecordResponse {
     private String treatment;
     private String notes;
 
-    @Schema(description = "Идентификатор посещения", example = "100")
+    @Schema(description = "Уникальный идентификатор записи", example = "1")
     public Long getId() {
         return id;
     }
@@ -21,7 +21,7 @@ public class MedicalRecordResponse {
         this.id = id;
     }
 
-    @Schema(description = "Идентификатор врача", example = "100")
+    @Schema(description = "Уникальный идентификатор врача", example = "1")
     public Long getDoctorId() {
         return doctorId;
     }
@@ -29,7 +29,7 @@ public class MedicalRecordResponse {
         this.doctorId = doctorId;
     }
 
-    @Schema(description = "Идентификатор клиента", example = "100")
+    @Schema(description = "Уникальный идентификатор клиента", example = "1")
     public Long getClientId() {
         return clientId;
     }
@@ -37,7 +37,7 @@ public class MedicalRecordResponse {
         this.clientId = clientId;
     }
 
-    @Schema(description = "Идентификатор питомца", example = "100")
+    @Schema(description = "Уникальный идентификатор питомца", example = "1")
     public Long getPetId() {
         return petId;
     }
@@ -45,7 +45,7 @@ public class MedicalRecordResponse {
         this.petId = petId;
     }
 
-    @Schema(description = "Идентификатор приема", example = "100")
+    @Schema(description = "Уникальный идентификатор приема", example = "1")
     public Long getAppointmentId() {
         return appointmentId;
     }

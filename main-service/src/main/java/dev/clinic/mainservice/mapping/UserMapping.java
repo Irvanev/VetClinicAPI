@@ -1,10 +1,11 @@
 package dev.clinic.mainservice.mapping;
 
+import dev.clinic.mainservice.dtos.auth.SignUpRequest;
 import dev.clinic.mainservice.dtos.users.EditClientRequest;
 import dev.clinic.mainservice.dtos.users.UserResponse;
 import dev.clinic.mainservice.models.entities.*;
 
-public class UsersMapper {
+public class UserMapping {
     public static UserResponse toResponse(User user) {
         if (user == null) {
             return null;
@@ -33,6 +34,21 @@ public class UsersMapper {
         client.setLastName(request.getLastName());
         client.setNumberPhone(request.getNumberPhone());
         client.setDateOfBirth(request.getBirthDate());
+
+        return client;
+    }
+
+    public static Client registerClient(SignUpRequest request) {
+        if (request == null) {
+            return null;
+        }
+
+        Client client = new Client();
+
+        client.setFirstName(request.getFirstName());
+        client.setLastName(request.getLastName());
+        client.setNumberPhone(request.getNumber());
+        client.setEmail(request.getEmail());
 
         return client;
     }

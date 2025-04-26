@@ -1,6 +1,7 @@
 package dev.clinic.mainservice.services.impl;
 
 import dev.clinic.mainservice.dtos.auth.*;
+import dev.clinic.mainservice.mapping.UserMapping;
 import dev.clinic.mainservice.models.entities.Client;
 import dev.clinic.mainservice.models.entities.Role;
 import dev.clinic.mainservice.models.entities.User;
@@ -77,7 +78,7 @@ public class AuthServiceImpl implements AuthService {
         if (!signUpRequest.getPassword().equals(signUpRequest.getConfirmPassword())) {
             throw new IllegalArgumentException("Passwords do not match");
         }
-        Client client = modelMapper.map(signUpRequest, Client.class);
+        Client client = UserMapping.registerClient(signUpRequest);
         client.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
         client.setEnabled(false);
 

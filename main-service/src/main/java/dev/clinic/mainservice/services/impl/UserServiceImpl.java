@@ -1,10 +1,9 @@
 package dev.clinic.mainservice.services.impl;
 
 import dev.clinic.mainservice.dtos.auth.ChangePasswordRequest;
-import dev.clinic.mainservice.dtos.pets.PetResponse;
 import dev.clinic.mainservice.dtos.users.*;
 import dev.clinic.mainservice.exceptions.ResourceNotFoundException;
-import dev.clinic.mainservice.mapping.UsersMapper;
+import dev.clinic.mainservice.mapping.UserMapping;
 import dev.clinic.mainservice.models.entities.*;
 import dev.clinic.mainservice.models.enums.RoleEnum;
 import dev.clinic.mainservice.repositories.*;
@@ -12,7 +11,6 @@ import dev.clinic.mainservice.services.ImageUploaderService;
 import dev.clinic.mainservice.services.UserService;
 import org.hibernate.service.spi.ServiceException;
 import org.modelmapper.ModelMapper;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
@@ -71,7 +69,7 @@ public class UserServiceImpl implements UserService {
     public Page<UserResponse> getAllUsers(Pageable pageable) {
         Page<User> usersPage = userRepository.findAll(pageable);
         List<UserResponse> userResponses = usersPage.getContent().stream()
-                .map(UsersMapper::toResponse)
+                .map(UserMapping::toResponse)
                 .collect(Collectors.toList());
         return new PageImpl<>(userResponses, pageable, usersPage.getTotalElements());
     }
@@ -191,7 +189,7 @@ public class UserServiceImpl implements UserService {
 
         String oldPhotoUrl = client.getPhotoUrl();
 
-        UsersMapper.fromRequest(request);
+        UserMapping.fromRequest(request);
 
         if (photo != null && !photo.isEmpty()) {
             try {

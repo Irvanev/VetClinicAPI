@@ -1,14 +1,16 @@
 package dev.clinic.mainservice.dtos.medicalRecords;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
 
-@Schema(description = "Сущность для добавления посещения")
+@Schema(description = "Запрос на создание медицинской карты")
 public class MedicalRecordRequest {
     private String diagnosis;
     private String treatment;
     private String notes;
 
     @Schema(description = "Диагноз", example = "Почечная недостаточность")
+    @NotEmpty(message = "Диагноз не может быть пустым")
     public String getDiagnosis() {
         return diagnosis;
     }
@@ -17,6 +19,7 @@ public class MedicalRecordRequest {
     }
 
     @Schema(description = "Лечение", example = "Каждое утро принимать таблетки")
+    @NotEmpty(message = "Лечение не может быть пустым")
     public String getTreatment() {
         return treatment;
     }
