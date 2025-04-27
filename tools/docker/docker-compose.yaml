@@ -12,20 +12,6 @@ services:
     volumes:
       - ./db-init:/docker-entrypoint-initdb.d
       - ./pgdata:/var/lib/postgresql/data
-  minio:
-    image: minio/minio:latest
-    container_name: minio
-    restart: unless-stopped
-    volumes:
-      - minio-storage:/data
-      - minio-config:/root/.minio
-    environment:
-      MINIO_ROOT_USER: ${MINIO_USERNAME}
-      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    command: server /data --console-address ":9001"
 
   # --- pgAdmin ---
   pgadmin:
@@ -52,13 +38,29 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBIT_MQ_PASSWORD}
     volumes:
       - ./rabbitmq_data:/var/lib/rabbitmq
-#      - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
+  #      - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
 
   # --- Redis ---
   redis:
     image: "redis:latest"
     ports:
       - "6379:6379"
+
+  # --- Minio ---
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    volumes:
+      - minio-storage:/data
+      - minio-config:/root/.minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USERNAME}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
 
   # --- Logstash ---
   logstash:
@@ -128,7 +130,9 @@ services:
         condition: service_started
     ports:
       - "8081:8081"
+
 volumes:
+  pgdata:
   minio-storage:
   minio-config:
 
