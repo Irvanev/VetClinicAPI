@@ -29,6 +29,8 @@ public class PetMapping {
         petResponse.setId(pet.getId());
         petResponse.setName(pet.getName());
         petResponse.setBreed(pet.getBreed());
+        petResponse.setAnimalType(pet.getAnimalType());
+        petResponse.setPhotoUrl(pet.getPhotoUrl());
 
         return petResponse;
     }

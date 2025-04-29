@@ -8,7 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface PetService {
-    PetResponse createPet(PetRequest petRequest, MultipartFile photo);
+    PetResponse createPet(PetRequest petRequest);
+    PetResponse updatePetPhoto(Long petId, MultipartFile photo);
     PetResponse createPetAdmin(PetRequestAdmin createPetDto);
     PetResponse getPetById(Long id);
     List<PetResponse> getAllPets();

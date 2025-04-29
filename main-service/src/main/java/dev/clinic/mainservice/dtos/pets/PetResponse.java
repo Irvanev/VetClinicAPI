@@ -11,6 +11,7 @@ public class PetResponse {
     private LocalDate birthDate;
     private String animalType;
     private String breed;
+    private String photoUrl;
 
     @Schema(description = "Уникальный идентификатор питомца", example = "1")
     public Long getId() {
@@ -50,5 +51,13 @@ public class PetResponse {
     }
     public void setBreed(String breed) {
         this.breed = breed;
+    }
+
+    @Schema(description = "Фото питомца", example = "http://localhost/images/photo_name.png")
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
     }
 }

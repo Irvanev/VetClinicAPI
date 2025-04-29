@@ -47,7 +47,7 @@ public class PetServiceImpl implements PetService {
     }
 
     @Override
-    public PetResponse createPet(PetRequest petRequest, MultipartFile photo) {
+    public PetResponse createPet(PetRequest petRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() ||
                 "anonymousUser".equals(authentication.getPrincipal())) {
@@ -61,22 +61,31 @@ public class PetServiceImpl implements PetService {
         Pet pet = modelMapper.map(petRequest, Pet.class);
         pet.setOwner(owner);
 
-        if (photo != null && !photo.isEmpty()) {
-            try {
-                if (!Objects.requireNonNull(photo.getContentType()).startsWith("image/")) {
-                    throw new IllegalArgumentException("Invalid file type. Only images are allowed");
-                }
+        Pet saved = petRepository.save(pet);
 
-                String newPhotoUrl = imageUploaderService.uploadImage(photo);
-                pet.setPhotoUrl(newPhotoUrl);
+        return modelMapper.map(saved, PetResponse.class);
+    }
 
-            } catch (IOException | RuntimeException ex) {
-                throw new ServiceException("Image processing failed", ex);
-            }
+    @Override
+    public PetResponse updatePetPhoto(Long petId, MultipartFile photo) {
+        if (photo == null || photo.isEmpty()) {
+            throw new IllegalArgumentException("Photo must be provided");
+        }
+        if (!Objects.requireNonNull(photo.getContentType()).startsWith("image/")) {
+            throw new IllegalArgumentException("Invalid file type. Only images are allowed");
         }
 
-        Pet savedPet = petRepository.save(pet);
-        return modelMapper.map(savedPet, PetResponse.class);
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
+
+        try {
+            String photoUrl = imageUploaderService.uploadImage(photo);
+            pet.setPhotoUrl(photoUrl);
+            Pet updated = petRepository.save(pet);
+            return modelMapper.map(updated, PetResponse.class);
+        } catch (IOException|RuntimeException ex) {
+            throw new ServiceException("Image processing failed", ex);
+        }
     }
 
     @Override

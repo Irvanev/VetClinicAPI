@@ -38,16 +38,30 @@ public class PetController {
                     @ApiResponse(responseCode = "400", description = "Некорректные данные")
             }
     )
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping
     public ResponseEntity<PetResponse> createPet(
             @Parameter(description = "Данные питомца", required = true)
-            @RequestPart("pet") @Valid PetRequest petRequest,
-
-            @Parameter(description = "Фото питомца", required = false)
-            @RequestPart(value = "photo", required = false) MultipartFile photo
+            @RequestBody @Valid PetRequest petRequest
     ) {
-        PetResponse response = petService.createPet(petRequest, photo);
+        PetResponse response = petService.createPet(petRequest);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @Operation(
+            summary = "Добавление фото питомцу после создания",
+            description = "Добавляет фото к питомцу после его создания",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Фото успешно добавлено"),
+                    @ApiResponse(responseCode = "400", description = "Некорректные данные"),
+            }
+    )
+    @PostMapping(value = "/{petId}/photo")
+    public ResponseEntity<PetResponse> uploadPetPhoto(
+            @PathVariable Long petId,
+            @RequestPart("photo") MultipartFile photo
+    ) {
+        PetResponse response = petService.updatePetPhoto(petId, photo);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(
