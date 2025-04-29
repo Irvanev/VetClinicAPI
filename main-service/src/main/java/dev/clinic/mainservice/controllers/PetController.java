@@ -55,7 +55,7 @@ public class PetController {
                     @ApiResponse(responseCode = "400", description = "Некорректные данные"),
             }
     )
-    @PostMapping(value = "/{petId}/photo")
+    @PostMapping(value = "/{petId}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PetResponse> uploadPetPhoto(
             @PathVariable Long petId,
             @RequestPart("photo") MultipartFile photo
