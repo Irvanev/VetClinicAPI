@@ -121,7 +121,7 @@ public class PetController {
     )
     @GetMapping("/owner")
     public ResponseEntity<List<PetResponse>> getAllPetsByPrincipalOwner() {
-        List<PetResponse> responses = petService.getAllPets();
+        List<PetResponse> responses = petService.getAllPetsByPrincipalOwner();
         return new ResponseEntity<>(responses, HttpStatus.OK);
     }
 

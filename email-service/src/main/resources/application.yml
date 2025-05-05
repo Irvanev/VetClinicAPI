@@ -27,3 +27,14 @@ logging:
     dev.clinic.emailservice: DEBUG
 server:
   port: 8081
+  address: 0.0.0.0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true

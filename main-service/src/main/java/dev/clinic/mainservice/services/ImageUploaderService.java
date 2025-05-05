@@ -23,7 +23,7 @@ public class ImageUploaderService {
     private final MinioClient minioClient;
     private final String bucketName = "images";
 
-    @Value("${minio.endpoint}")
+    @Value("localhost")
     private String endpoint;
 
     public ImageUploaderService(MinioClient minioClient) {

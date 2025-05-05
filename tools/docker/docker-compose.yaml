@@ -1,17 +1,33 @@
 services:
   # --- Postgres with PostGIS ---
   postgres:
-    image: postgis/postgis:latest
+    image: kartoza/postgis:17-3.5
     container_name: postgres
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_HOST_AUTH_METHOD: trust
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -P ${DB_PASSWORD}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
     volumes:
       - ./db-init:/docker-entrypoint-initdb.d
       - ./pgdata:/var/lib/postgresql/data
+
+  # --- Postgres exporter fom Prometheus ---
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/postgres?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      - postgres
 
   # --- pgAdmin ---
   pgadmin:
@@ -45,6 +61,17 @@ services:
     image: "redis:latest"
     ports:
       - "6379:6379"
+  # --- Redis exporter for Prometheus ---
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+    ports:
+      - "9121:9121"
+    depends_on:
+      - redis
 
   # --- Minio ---
   minio:
@@ -57,6 +84,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_USERNAME}
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+      MINIO_PROMETHEUS_AUTH_TYPE: "public"
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -131,8 +159,32 @@ services:
     ports:
       - "8081:8081"
 
+  # --- Prometheus ---
+  prometheus:
+    image: prom/prometheus:v2.37.9
+    container_name: prometheus
+    ports:
+      - '9090:9090'
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./data:/prometheus
+    restart: unless-stopped
+
+  # --- Grafana ---
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - '3000:3000'
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+
 volumes:
   pgdata:
   minio-storage:
   minio-config:
+  grafana-data:
 

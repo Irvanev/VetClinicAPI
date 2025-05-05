@@ -1,8 +1,11 @@
 package dev.clinic.mainservice.utils;
 
 import dev.clinic.mainservice.models.entities.Role;
+import dev.clinic.mainservice.models.entities.User;
 import dev.clinic.mainservice.models.enums.RoleEnum;
 import dev.clinic.mainservice.repositories.RoleRepository;
+import dev.clinic.mainservice.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 

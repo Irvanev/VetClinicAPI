@@ -12,6 +12,7 @@ gradle
 /tools/docker/pgdata
 /tools/docker/rabbitmq_data
 /tools/docker/rabbitmq_definitions.json
+/tools/docker/data/
 
 ### STS ###
 .apt_generated
