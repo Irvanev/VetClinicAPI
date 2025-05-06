@@ -11,6 +11,7 @@ import dev.clinic.mainservice.models.enums.AppointmentStatus;
 import dev.clinic.mainservice.models.enums.AppointmentType;
 import dev.clinic.mainservice.repositories.*;
 import dev.clinic.mainservice.services.AppointmentService;
+import dev.clinic.mainservice.utils.AuthUtil;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -35,6 +36,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final PetRepository petRepository;
     private final ClientRepository clientRepository;
     private final DoctorRepository doctorRepository;
+    private final AuthUtil authUtil;
 
     @Autowired
     public AppointmentServiceImpl(
@@ -42,23 +44,20 @@ public class AppointmentServiceImpl implements AppointmentService {
             ScheduleRepository scheduleRepository,
             PetRepository petRepository,
             ClientRepository clientRepository,
-            DoctorRepository doctorRepository
+            DoctorRepository doctorRepository,
+            AuthUtil authUtil
     ) {
         this.appointmentRepository = appointmentRepository;
         this.scheduleRepository = scheduleRepository;
         this.petRepository = petRepository;
         this.clientRepository = clientRepository;
         this.doctorRepository = doctorRepository;
+        this.authUtil = authUtil;
     }
 
     @Override
     public void createAppointment(AppointmentRequest appointmentRequest) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            throw new ResourceNotFoundException("User isn't authenticated");
-        }
-
-        String ownerEmail = authentication.getName();
+        String ownerEmail = authUtil.getPrincipalEmail();
 
         LocalDateTime appointmentStartDateTime = appointmentRequest.getAppointmentDate()
                 .atTime(appointmentRequest.getAppointmentStartTime());
@@ -106,11 +105,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public List<AppointmentResponseOwner> getAllOwnerAppointments() {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            throw new ResourceNotFoundException("User isn't authenticated");
-        }
-        String ownerEmail = authentication.getName();
+        String ownerEmail = authUtil.getPrincipalEmail();
 
         Client owner = clientRepository.findByEmail(ownerEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Owner not found with email: " + ownerEmail));

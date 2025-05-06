@@ -9,6 +9,7 @@ import dev.clinic.mainservice.models.enums.RoleEnum;
 import dev.clinic.mainservice.repositories.*;
 import dev.clinic.mainservice.services.ImageUploaderService;
 import dev.clinic.mainservice.services.UserService;
+import dev.clinic.mainservice.utils.AuthUtil;
 import org.hibernate.service.spi.ServiceException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,7 @@ public class UserServiceImpl implements UserService {
     private final DoctorRepository doctorRepository;
     private final ClientRepository clientRepository;
     private final ImageUploaderService imageUploaderService;
+    private final AuthUtil authUtil;
 
     @Autowired
     public UserServiceImpl(
@@ -51,7 +53,8 @@ public class UserServiceImpl implements UserService {
             BranchesRepository branchesRepository,
             DoctorRepository doctorRepository,
             ClientRepository clientRepository,
-            ImageUploaderService imageUploaderService
+            ImageUploaderService imageUploaderService,
+            AuthUtil authUtil
     ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -62,6 +65,7 @@ public class UserServiceImpl implements UserService {
         this.doctorRepository = doctorRepository;
         this.clientRepository = clientRepository;
         this.imageUploaderService = imageUploaderService;
+        this.authUtil = authUtil;
     }
 
 
@@ -97,11 +101,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDetailResponse getPrincipalUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            throw new ResourceNotFoundException("User isn't authenticated");
-        }
-        String ownerEmail = authentication.getName();
+        String ownerEmail = authUtil.getPrincipalEmail();
         Client client = clientRepository.findByEmail(ownerEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + ownerEmail));
         return modelMapper.map(client, UserDetailResponse.class);
@@ -109,33 +109,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void changePassword(ChangePasswordRequest request) {
-        // Получаем аутентифицированного пользователя из SecurityContext
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() ||
-                "anonymousUser".equals(authentication.getPrincipal())) {
-            throw new ResourceNotFoundException("User isn't authenticated");
-        }
+        String userEmail = authUtil.getPrincipalEmail();
 
-        String userEmail = authentication.getName();
-
-        // Загружаем пользователя из базы данных по email
         Client client = (Client) userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Проверяем, что введённый старый пароль соответствует сохранённому
         if (!passwordEncoder.matches(request.getOldPassword(), client.getPassword())) {
             throw new IllegalArgumentException("Old password is incorrect");
         }
 
-        // Проверяем, что новый пароль и подтверждение совпадают
         if (!request.getNewPassword().equals(request.getRepeatedNewPassword())) {
             throw new IllegalArgumentException("New password and repeated password do not match");
         }
 
-        // Обновляем пароль (шифруем новый пароль)
         client.setPassword(passwordEncoder.encode(request.getNewPassword()));
 
-        // Сохраняем изменения в базе данных
         userRepository.saveAndFlush(client);
     }
 

@@ -2,6 +2,7 @@ package dev.clinic.mainservice.models.entities;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -41,7 +42,7 @@ public abstract class User {
     private String password;
 
     /** Дата рождения пользователя. */
-    private Date dateOfBirth;
+    private LocalDate dateOfBirth;
 
     /** Флаг, указывающий, активен ли пользователь. */
     private boolean enabled;
@@ -126,10 +127,10 @@ public abstract class User {
         this.password = password;
     }
 
-    public Date getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
-    public void setDateOfBirth(Date dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 

@@ -3,7 +3,7 @@ package dev.clinic.mainservice.dtos.users;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Schema(description = "Запрос на регистрацию врача")
 public class DoctorRequest {
@@ -11,7 +11,7 @@ public class DoctorRequest {
     private String email;
     private String fullName;
     private String numberPhone;
-    private Date dateOfBirth;
+    private LocalDate dateOfBirth;
     private String specialization;
     private String address;
     private String education;
@@ -59,10 +59,10 @@ public class DoctorRequest {
     @Schema(description = "Дата рождения", example = "2023-10-01")
     @NotNull(message = "Дата рождения не может быть пустой")
     @Past(message = "Дата рождения должна быть в прошлом")
-    public Date getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
-    public void setDateOfBirth(Date dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 

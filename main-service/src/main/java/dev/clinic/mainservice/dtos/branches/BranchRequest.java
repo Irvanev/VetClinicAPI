@@ -42,7 +42,6 @@ public class BranchRequest {
     }
 
     @Schema(description = "Координаты филиала")
-    @NotEmpty(message = "Координаты не могут быть пустыми")
     public Point getCoordinates() {
         return coordinates;
     }

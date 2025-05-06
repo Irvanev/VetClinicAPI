@@ -24,7 +24,6 @@ public class EmailMessageProducer {
             Map<String, String> message = new HashMap<>();
             message.put("email", email);
             message.put("verificationCode", verificationCode);
-            // Дополнительные параметры (тема, имя пользователя и т.д.) можно добавить здесь
             ObjectMapper mapper = new ObjectMapper();
             String jsonMessage = mapper.writeValueAsString(message);
             rabbitTemplate.convertAndSend("exchange", "emailVerificationCode.key", jsonMessage);
@@ -38,7 +37,6 @@ public class EmailMessageProducer {
             Map<String, String> message = new HashMap<>();
             message.put("email", email);
             message.put("password", password);
-            // Дополнительные параметры (тема, имя пользователя и т.д.) можно добавить здесь
             ObjectMapper mapper = new ObjectMapper();
             String jsonMessage = mapper.writeValueAsString(message);
             rabbitTemplate.convertAndSend("exchange", "emailPassword.key", jsonMessage);

@@ -10,6 +10,7 @@ import dev.clinic.mainservice.repositories.PetRepository;
 import dev.clinic.mainservice.repositories.UserRepository;
 import dev.clinic.mainservice.services.ImageUploaderService;
 import dev.clinic.mainservice.services.PetService;
+import dev.clinic.mainservice.utils.AuthUtil;
 import jakarta.persistence.EntityNotFoundException;
 import org.hibernate.service.spi.ServiceException;
 import org.modelmapper.ModelMapper;
@@ -32,28 +33,26 @@ public class PetServiceImpl implements PetService {
     private final PetRepository petRepository;
     private final UserRepository userRepository;
     private final ImageUploaderService imageUploaderService;
+    private final AuthUtil authUtil;
 
     @Autowired
     public PetServiceImpl(
             ModelMapper modelMapper,
             PetRepository petRepository,
             UserRepository userRepository,
-            ImageUploaderService imageUploaderService
+            ImageUploaderService imageUploaderService,
+            AuthUtil authUtil
     ) {
         this.modelMapper = modelMapper;
         this.petRepository = petRepository;
         this.userRepository = userRepository;
         this.imageUploaderService = imageUploaderService;
+        this.authUtil = authUtil;
     }
 
     @Override
     public PetResponse createPet(PetRequest petRequest) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() ||
-                "anonymousUser".equals(authentication.getPrincipal())) {
-            throw new ResourceNotFoundException("User isn't authenticated");
-        }
-        String ownerEmail = authentication.getName();
+        String ownerEmail = authUtil.getPrincipalEmail();
 
         User owner = userRepository.findByEmail(ownerEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Owner not found with email: " + ownerEmail));
@@ -134,11 +133,7 @@ public class PetServiceImpl implements PetService {
 
     @Override
     public List<PetResponse> getAllPetsByPrincipalOwner() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            throw new ResourceNotFoundException("User isn't authenticated");
-        }
-        String ownerEmail = authentication.getName();
+        String ownerEmail = authUtil.getPrincipalEmail();
 
         List<Pet> pets = petRepository.findAllByOwnerEmail(ownerEmail);
         return pets

@@ -1,11 +1,11 @@
 package dev.clinic.mainservice.dtos.users;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public class EditClientRequest {
     private String firstName;
     private String lastName;
-    private Date birthDate;
+    private LocalDate birthDate;
     private String numberPhone;
 
     public String getFirstName() {
@@ -24,11 +24,11 @@ public class EditClientRequest {
         this.lastName = lastName;
     }
 
-    public Date getBirthDate() {
+    public LocalDate getBirthDate() {
         return birthDate;
     }
 
-    public void setBirthDate(Date birthDate) {
+    public void setBirthDate(LocalDate birthDate) {
         this.birthDate = birthDate;
     }
 
