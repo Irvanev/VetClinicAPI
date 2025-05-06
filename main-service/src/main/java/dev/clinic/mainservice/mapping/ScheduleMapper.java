@@ -7,13 +7,12 @@ import dev.clinic.mainservice.models.entities.Schedule;
 
 public class ScheduleMapper {
 
-    public static Schedule fromRequest(ScheduleRequest request) {
+    public static Schedule fromRequest(ScheduleRequest request, Doctor doctor) {
         if (request == null) {
             return null;
         }
         Schedule schedule = new Schedule();
 
-        Doctor doctor = new Doctor();
         doctor.setId(request.getDoctorId());
         schedule.setDoctor(doctor);
 

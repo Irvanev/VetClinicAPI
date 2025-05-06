@@ -21,6 +21,7 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springdoc: DEBUG
     io.swagger.v3: DEBUG
+    org.springframework.boot.logging: DEBUG
 
 minio:
   endpoint: ${MINIO_URL}

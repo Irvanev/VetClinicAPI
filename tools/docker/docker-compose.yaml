@@ -90,42 +90,43 @@ services:
       - "9001:9001"
     command: server /data --console-address ":9001"
 
-  # --- Logstash ---
+  # Elasticsearch
+  elasticsearch:
+    image: elasticsearch:8.8.0
+    container_name: elasticsearch
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+
+  # Logstash
   logstash:
     image: logstash:7.17.0
     container_name: logstash
     volumes:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
       - ./logs/vetclinic.log:/app/logs/vetclinic.log
+      - ./logs/archive:/app/logs/archive
     ports:
-      - "5000:5000"
+      - "5555:5555"
     depends_on:
       - elasticsearch
 
-  # --- Elasticsearch ---
-  elasticsearch:
-    image: elasticsearch:8.8.0
-    container_name: elasticsearch
-    restart: unless-stopped
-    ports:
-      - "9200:9200"
-    environment:
-      discovery.type: single-node
-      xpack.security.enabled: "false"
-      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
-
-  # --- Kibana ---
+  # Kibana
   kibana:
     image: kibana:8.8.0
     container_name: kibana
     environment:
-      - ELASTICSEARCH_HOSTS=["http://elasticsearch:9200"]
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
     ports:
       - "5601:5601"
     depends_on:
       - elasticsearch
 
-  # --- Main Service ---
+  # main-service
   main-service:
     build:
       context: ../../main-service
@@ -134,6 +135,7 @@ services:
       - ../../.env
     volumes:
       - ./logs/vetclinic.log:/app/logs/vetclinic.log
+      - ./logs/archive:/app/logs/archive
     depends_on:
       postgres:
         condition: service_started
