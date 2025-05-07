@@ -57,7 +57,6 @@ public class AppointmentRequest {
     }
 
     @Schema(description = "Тип приема", example = "CONSULTATION")
-    @NotEmpty(message = "Тип приема не может быть пустым")
     public AppointmentType getAppointmentType() {
         return appointmentType;
     }

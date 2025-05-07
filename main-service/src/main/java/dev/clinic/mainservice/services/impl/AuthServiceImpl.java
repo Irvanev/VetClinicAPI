@@ -164,7 +164,7 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = tokenProvider.generateRefreshToken(email, role);
         log.info("END login: email={} issued tokens [accessExpiresIn={}ms, refreshExpiresIn={}ms]",
                 email, accessTokenValidityInMillis, refreshTokenValidityInMillis);
-
+        emailService.sendDeviceTokenAndUserId(user.getId(), signInRequest.getTokenDevice());
         return new AuthResponse(user.getId(), accessToken, refreshToken, accessTokenValidityInMillis, refreshTokenValidityInMillis);
     }
 

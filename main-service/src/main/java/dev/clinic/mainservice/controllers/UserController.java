@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,7 +46,7 @@ public class UserController {
     @GetMapping
     public ResponseEntity<Page<UserResponse>> getAllUsers(
             @Parameter(description = "Параметры пагинации")
-            Pageable pageable
+            @ParameterObject Pageable pageable
     ) {
         return new ResponseEntity<>(userService.getAllUsers(pageable), HttpStatus.OK);
     }

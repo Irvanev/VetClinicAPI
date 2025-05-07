@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotEmpty;
 public class SignInRequest {
     private String email;
     private String password;
+    private String tokenDevice;
 
     public SignInRequest(String email, String password) {
         this.email = email;
@@ -30,6 +31,14 @@ public class SignInRequest {
     }
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Schema(description = "Токен устройсчтва для отправки Push-уведомлений")
+    public String getTokenDevice() {
+        return tokenDevice;
+    }
+    public void setTokenDevice(String tokenDevice) {
+        this.tokenDevice = tokenDevice;
     }
 
     @Override

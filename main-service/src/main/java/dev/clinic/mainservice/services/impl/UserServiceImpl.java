@@ -13,6 +13,8 @@ import dev.clinic.mainservice.utils.AuthUtil;
 import org.hibernate.service.spi.ServiceException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -68,7 +70,7 @@ public class UserServiceImpl implements UserService {
         this.authUtil = authUtil;
     }
 
-
+    @Cacheable("users")
     @Override
     public Page<UserResponse> getAllUsers(Pageable pageable) {
         Page<User> usersPage = userRepository.findAll(pageable);
@@ -78,6 +80,7 @@ public class UserServiceImpl implements UserService {
         return new PageImpl<>(userResponses, pageable, usersPage.getTotalElements());
     }
 
+    @Cacheable("users")
     @Override
     public UserResponse getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
@@ -85,6 +88,7 @@ public class UserServiceImpl implements UserService {
         return modelMapper.map(user, UserResponse.class);
     }
 
+    @Cacheable("users")
     @Override
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
@@ -92,6 +96,7 @@ public class UserServiceImpl implements UserService {
         return modelMapper.map(user, UserResponse.class);
     }
 
+    @Cacheable("users")
     @Override
     public UserResponse getUserByPetId(Long petId) {
         User user = userRepository.findByPetsId(petId)
@@ -99,6 +104,7 @@ public class UserServiceImpl implements UserService {
         return modelMapper.map(user, UserResponse.class);
     }
 
+    @Cacheable("users")
     @Override
     public UserDetailResponse getPrincipalUser() {
         String ownerEmail = authUtil.getPrincipalEmail();
@@ -107,6 +113,7 @@ public class UserServiceImpl implements UserService {
         return modelMapper.map(client, UserDetailResponse.class);
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     @Override
     public void changePassword(ChangePasswordRequest request) {
         String userEmail = authUtil.getPrincipalEmail();
@@ -127,6 +134,7 @@ public class UserServiceImpl implements UserService {
         userRepository.saveAndFlush(client);
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     @Override
     public UserResponse createDoctor(DoctorRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -156,6 +164,7 @@ public class UserServiceImpl implements UserService {
         return modelMapper.map(doctor, UserResponse.class);
     }
 
+    @Cacheable("users")
     @Override
     public List<DoctorResponseForSelectInAppointment> getAllDoctorsByBranchId(Long branchId) {
         return doctorRepository.findAllByBranchId(branchId).stream()

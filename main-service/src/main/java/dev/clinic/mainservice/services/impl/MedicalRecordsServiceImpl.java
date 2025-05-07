@@ -14,6 +14,9 @@ import dev.clinic.mainservice.repositories.PetRepository;
 import dev.clinic.mainservice.services.MedicalRecordsService;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +40,7 @@ public class MedicalRecordsServiceImpl implements MedicalRecordsService {
     }
 
     @Override
+    @CacheEvict(value = {"medicalRecords", "medicalRecordsList"}, allEntries = true)
     public void createMedicalRecord(Long appointmentId, MedicalRecordRequest request) {
         if (appointmentId == null || appointmentId < 0) {
             throw new IllegalArgumentException("Invalid appointment id: " + appointmentId);
@@ -54,6 +58,7 @@ public class MedicalRecordsServiceImpl implements MedicalRecordsService {
     }
 
     @Override
+    @Cacheable("medicalRecords")
     public MedicalRecordResponse getMedicalRecord(Long id) {
         if (id == null || id < 0) {
             throw new IllegalArgumentException("Invalid medical record id: " + id);
@@ -65,6 +70,12 @@ public class MedicalRecordsServiceImpl implements MedicalRecordsService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "medicalRecords", key = "#id"),
+                    @CacheEvict(value = "medicalRecordsList", allEntries = true)
+            }
+    )
     public boolean deleteMedicalRecord(Long id) {
         if (id == null || id < 0) {
             throw new IllegalArgumentException("Invalid medical record id: " + id);
@@ -83,6 +94,12 @@ public class MedicalRecordsServiceImpl implements MedicalRecordsService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "medicalRecords", key = "#id"),
+                    @CacheEvict(value = "medicalRecordsList", allEntries = true)
+            }
+    )
     public void updateMedicalRecord(Long id, MedicalRecordRequest request) {
 //        if (id == null || id < 0) {
 //            throw new IllegalArgumentException("Invalid medical record id: " + id);
@@ -104,6 +121,7 @@ public class MedicalRecordsServiceImpl implements MedicalRecordsService {
     }
 
     @Override
+    @Cacheable("medicalRecordsList")
     public List<MedicalRecordResponse> getAllMedicalRecordByPet(Long petId) {
         if (petId == null || petId < 0) {
             throw new IllegalArgumentException("Invalid pet id: " + petId);
@@ -120,6 +138,7 @@ public class MedicalRecordsServiceImpl implements MedicalRecordsService {
     }
 
     @Override
+    @Cacheable("medicalRecordsList")
     public List<MedicalRecordResponse> getAllMedicalRecords() {
         try {
             return medicalRecordsRepository.findAll()

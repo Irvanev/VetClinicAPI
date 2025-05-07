@@ -13,6 +13,9 @@ import dev.clinic.mainservice.utils.AuthUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +45,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable("schedulesList")
     public List<ScheduleResponse> getAllSchedules() {
         List<Schedule> schedules = scheduleRepository.findAll();
 
@@ -52,6 +56,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable("schedulesList")
     public List<ScheduleResponse> getAllSchedulesByDoctorId(Long doctorId) {
         if (doctorId == null || doctorId <= 0) {
             throw new IllegalArgumentException("Doctor id must be provided and greater than zero");
@@ -66,6 +71,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable("schedules")
     public List<ScheduleResponse> getAllSchedulesByDoctorIdAndDate(Long doctorId, LocalDate date) {
         if (doctorId == null || doctorId <= 0) {
             throw new IllegalArgumentException("Doctor id must be provided and greater than zero");
@@ -79,6 +85,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable("schedulesList")
     public List<ScheduleResponse> getAllPrincipalSchedules() {
         String userEmail = authUtil.getPrincipalEmail();
         log.info("Requesting schedules for doctor '{}'", userEmail);
@@ -91,6 +98,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "schedules")
     public List<ScheduleResponse> getAllPrincipalSchedulesByDate(LocalDate date) {
         String userEmail = authUtil.getPrincipalEmail();
         log.info("Requesting schedules for doctor '{}' on date {}", userEmail, date);
@@ -103,6 +111,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"schedules", "schedulesList"}, allEntries = true)
     public ScheduleResponse createDoctorSchedule(ScheduleRequest request) {
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor with id " + request.getDoctorId() + " not found"));
@@ -116,6 +125,12 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "schedules", key = "#id"),
+                    @CacheEvict(value = "schedulesList", allEntries = true)
+            }
+    )
     public void editDoctorSchedule(Long id, ScheduleRequest request) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("Schedule id must be provided");
@@ -124,6 +139,12 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "schedules", key = "#id"),
+                    @CacheEvict(value = "schedulesList", allEntries = true)
+            }
+    )
     public void deleteDoctorSchedule(Long id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("Schedule id must be provided and greater than zero");

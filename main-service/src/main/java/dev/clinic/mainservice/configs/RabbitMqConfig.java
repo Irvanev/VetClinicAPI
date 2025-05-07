@@ -9,7 +9,7 @@ public class RabbitMqConfig {
     static final String emailVerificationCodeQueue = "queueVerificationCodeEmail";
     static final String emailPasswordQueue = "queuePasswordEmail";
     static final String notificationQueue = "queueNotification";
-    public static final String tokenQueue = "tokenNotification";
+    static final String tokenQueue = "tokenNotification";
 
     static final String exchangeName = "exchange";
 

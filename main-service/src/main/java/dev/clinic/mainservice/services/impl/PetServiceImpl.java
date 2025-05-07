@@ -15,6 +15,9 @@ import jakarta.persistence.EntityNotFoundException;
 import org.hibernate.service.spi.ServiceException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
@@ -51,6 +54,7 @@ public class PetServiceImpl implements PetService {
     }
 
     @Override
+    @CacheEvict(value = "pets", allEntries = true)
     public PetResponse createPet(PetRequest petRequest) {
         String ownerEmail = authUtil.getPrincipalEmail();
 
@@ -66,6 +70,12 @@ public class PetServiceImpl implements PetService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "pets", key = "#id"),
+                    @CacheEvict(value = "petsList", allEntries = true)
+            }
+    )
     public PetResponse updatePetPhoto(Long petId, MultipartFile photo) {
         if (photo == null || photo.isEmpty()) {
             throw new IllegalArgumentException("Photo must be provided");
@@ -88,6 +98,7 @@ public class PetServiceImpl implements PetService {
     }
 
     @Override
+    @CacheEvict(value = { "pets", "petsList"}, allEntries = true)
     public PetResponse createPetAdmin(PetRequestAdmin petRequest) {
         User owner = userRepository.findByEmail(petRequest.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("Owner not found with email: " + petRequest.getEmail()));
@@ -101,6 +112,7 @@ public class PetServiceImpl implements PetService {
 
 
     @Override
+    @Cacheable(value = "pets")
     public PetResponse getPetById(Long id) {
         Pet pet = petRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + id));
@@ -124,6 +136,7 @@ public class PetServiceImpl implements PetService {
 
     // метод для администрации
     @Override
+    @Cacheable(value = "petsList")
     public List<PetResponse> getAllPets() {
         return petRepository.findAll()
                 .stream()
@@ -132,6 +145,7 @@ public class PetServiceImpl implements PetService {
     }
 
     @Override
+    @Cacheable(value = "petsList")
     public List<PetResponse> getAllPetsByPrincipalOwner() {
         String ownerEmail = authUtil.getPrincipalEmail();
 
@@ -143,6 +157,12 @@ public class PetServiceImpl implements PetService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "pets", key = "#id"),
+                    @CacheEvict(value = "petsList", allEntries = true)
+            }
+    )
     public PetResponse editPet(Long id, PetRequest petRequest) {
         Pet pet = petRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + id));
@@ -167,6 +187,12 @@ public class PetServiceImpl implements PetService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "pets", key = "#id"),
+                    @CacheEvict(value = "petsList", allEntries = true)
+            }
+    )
     public boolean deletePet(Long id) {
         Pet pet = petRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + id));

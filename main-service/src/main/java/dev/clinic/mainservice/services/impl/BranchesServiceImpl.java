@@ -9,6 +9,9 @@ import dev.clinic.mainservice.models.entities.Branches;
 import dev.clinic.mainservice.repositories.BranchesRepository;
 import dev.clinic.mainservice.services.BranchesService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,12 +27,14 @@ public class BranchesServiceImpl implements BranchesService {
     }
 
     @Override
+    @Cacheable("branchesList")
     public List<BranchResponse> getAllBranches() {
         List<Branches> branches = branchesRepository.findAll();
         return BranchMapper.toResponseList(branches);
     }
 
     @Override
+    @CacheEvict(value = {"branches", "branchesList"}, allEntries = true)
     public BranchResponse createBranch(BranchRequest branchRequest) {
         Branches branch = BranchMapper.toRequest(branchRequest);
 
@@ -38,6 +43,7 @@ public class BranchesServiceImpl implements BranchesService {
     }
 
     @Override
+    @Cacheable(value = "branches", key = "#id")
     public BranchResponse getBranchById(Long id) {
         Branches branch = branchesRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Branch not found with id: " + id));
@@ -46,6 +52,12 @@ public class BranchesServiceImpl implements BranchesService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "branches", key = "#id"),
+                    @CacheEvict(value = "branchesList", allEntries = true)
+            }
+    )
     public BranchResponse editBranch(Long id, BranchRequest branchRequest) {
         Branches branch = branchesRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Branch not found with id: " + id));
@@ -55,6 +67,12 @@ public class BranchesServiceImpl implements BranchesService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                @CacheEvict(value = "branches", key = "#id"),
+                @CacheEvict(value = "branchesList", allEntries = true)
+        }
+    )
     public boolean deleteBranch(Long id) {
         Branches branch = branchesRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Branch not found with id: " + id));

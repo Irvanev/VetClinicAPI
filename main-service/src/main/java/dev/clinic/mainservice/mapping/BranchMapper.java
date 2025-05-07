@@ -5,12 +5,18 @@ import dev.clinic.mainservice.dtos.branches.BranchRequest;
 import dev.clinic.mainservice.dtos.branches.BranchResponse;
 import dev.clinic.mainservice.models.entities.Appointment;
 import dev.clinic.mainservice.models.entities.Branches;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class BranchMapper {
+
+    private static final GeometryFactory geometryFactory = new GeometryFactory();
+
     public static Branches toRequest(BranchRequest branchRequest) {
         if (branchRequest == null) {
             return null;
@@ -19,7 +25,11 @@ public class BranchMapper {
         branch.setAddress(branchRequest.getAddress());
         branch.setPhone(branchRequest.getPhone());
         branch.setEmail(branchRequest.getEmail());
-        branch.setCoordinates(branchRequest.getCoordinates());
+        Point point = createPoint(
+                branchRequest.getLongitude(),
+                branchRequest.getLatitude()
+        );
+        branch.setCoordinates(point);
         return branch;
     }
 
@@ -32,7 +42,8 @@ public class BranchMapper {
         branchResponse.setAddress(branches.getAddress());
         branchResponse.setPhone(branches.getPhone());
         branchResponse.setEmail(branches.getEmail());
-        branchResponse.setCoordinates(branches.getCoordinates());
+        branchResponse.setLatitude(branches.getCoordinates().getY());
+        branchResponse.setLongitude(branches.getCoordinates().getX());
         return branchResponse;
     }
 
@@ -43,5 +54,13 @@ public class BranchMapper {
         return branches.stream()
                 .map(BranchMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    private static Point createPoint(Double longitude, Double latitude) {
+        if (longitude == null || latitude == null) {
+            return null;
+        }
+        Coordinate coordinate = new Coordinate(longitude, latitude);
+        return geometryFactory.createPoint(coordinate);
     }
 }
