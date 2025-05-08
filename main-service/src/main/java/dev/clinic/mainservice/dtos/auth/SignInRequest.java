@@ -14,6 +14,8 @@ public class SignInRequest {
         this.password = password;
     }
 
+    public SignInRequest() {};
+
     @Schema(description = "Почта", example = "test@example.com")
     @NotEmpty(message = "Почта не может быть пустая")
     @Email
