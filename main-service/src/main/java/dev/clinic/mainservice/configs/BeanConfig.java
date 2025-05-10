@@ -23,13 +23,10 @@ public class BeanConfig {
     public ModelMapper modelMapper() {
         ModelMapper modelMapper = new ModelMapper();
 
-        // Настраиваем маппинг для DoctorRequest -> Doctor
         modelMapper.addMappings(new PropertyMap<DoctorRequest, Doctor>() {
             @Override
             protected void configure() {
-                // Игнорируем id, чтобы branchId не попадало в поле id доктора
                 skip(destination.getId());
-                // Игнорируем маппинг поля branch, т.к. оно будет устанавливаться вручную
                 skip(destination.getBranch());
             }
         });
@@ -48,7 +45,7 @@ public class BeanConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://your-production-domain.com"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:3001"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Collections.singletonList("*"));
         configuration.setAllowCredentials(true);

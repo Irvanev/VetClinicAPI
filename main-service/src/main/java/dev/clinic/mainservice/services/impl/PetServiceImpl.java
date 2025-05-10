@@ -4,8 +4,10 @@ import dev.clinic.mainservice.dtos.pets.PetRequest;
 import dev.clinic.mainservice.dtos.pets.PetRequestAdmin;
 import dev.clinic.mainservice.dtos.pets.PetResponse;
 import dev.clinic.mainservice.exceptions.ResourceNotFoundException;
+import dev.clinic.mainservice.models.entities.Client;
 import dev.clinic.mainservice.models.entities.Pet;
 import dev.clinic.mainservice.models.entities.User;
+import dev.clinic.mainservice.repositories.ClientRepository;
 import dev.clinic.mainservice.repositories.PetRepository;
 import dev.clinic.mainservice.repositories.UserRepository;
 import dev.clinic.mainservice.services.ImageUploaderService;
@@ -34,23 +36,22 @@ public class PetServiceImpl implements PetService {
 
     private final ModelMapper modelMapper;
     private final PetRepository petRepository;
-    private final UserRepository userRepository;
     private final ImageUploaderService imageUploaderService;
     private final AuthUtil authUtil;
+    private final ClientRepository clientRepository;
 
     @Autowired
     public PetServiceImpl(
             ModelMapper modelMapper,
             PetRepository petRepository,
-            UserRepository userRepository,
             ImageUploaderService imageUploaderService,
-            AuthUtil authUtil
-    ) {
+            AuthUtil authUtil,
+            ClientRepository clientRepository) {
         this.modelMapper = modelMapper;
         this.petRepository = petRepository;
-        this.userRepository = userRepository;
         this.imageUploaderService = imageUploaderService;
         this.authUtil = authUtil;
+        this.clientRepository = clientRepository;
     }
 
     @Override
@@ -58,7 +59,7 @@ public class PetServiceImpl implements PetService {
     public PetResponse createPet(PetRequest petRequest) {
         String ownerEmail = authUtil.getPrincipalEmail();
 
-        User owner = userRepository.findByEmail(ownerEmail)
+        Client owner = clientRepository.findByEmail(ownerEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Owner not found with email: " + ownerEmail));
 
         Pet pet = modelMapper.map(petRequest, Pet.class);
@@ -72,7 +73,7 @@ public class PetServiceImpl implements PetService {
     @Override
     @Caching(
             evict = {
-                    @CacheEvict(value = "pets", key = "#id"),
+                    @CacheEvict(value = "pets", key = "#petId"),
                     @CacheEvict(value = "petsList", allEntries = true)
             }
     )
@@ -100,7 +101,7 @@ public class PetServiceImpl implements PetService {
     @Override
     @CacheEvict(value = { "pets", "petsList"}, allEntries = true)
     public PetResponse createPetAdmin(PetRequestAdmin petRequest) {
-        User owner = userRepository.findByEmail(petRequest.getEmail())
+        Client owner = clientRepository.findByEmail(petRequest.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("Owner not found with email: " + petRequest.getEmail()));
 
         Pet pet = modelMapper.map(petRequest, Pet.class);

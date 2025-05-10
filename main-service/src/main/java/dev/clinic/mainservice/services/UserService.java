@@ -17,7 +17,7 @@ public interface UserService {
     UserResponse getUserByPetId(Long petId);
     void changePassword(ChangePasswordRequest changePasswordRequest);
 
-    UserResponse createDoctor(DoctorRequest doctorRequest);
+    DoctorResponse createDoctor(DoctorRequest doctorRequest);
     List<DoctorResponseForSelectInAppointment> getAllDoctorsByBranchId(Long branchId);
     UserResponse editClientByAdmin(EditClientRequest editClientRequest, Long clientId, MultipartFile photo);
 }

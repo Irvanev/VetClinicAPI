@@ -1,9 +1,11 @@
 package dev.clinic.mainservice.models.entities;
 
+import dev.clinic.mainservice.models.enums.AppointmentType;
 import jakarta.persistence.*;
 import org.locationtech.jts.geom.Point;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Сущность {@code Branches} представляет филиалы (подразделения).
@@ -20,6 +22,12 @@ import java.util.List;
 @Table(name = "branches")
 public class Branches extends BaseEntity {
 
+    /** Полное название филиала */
+    private String name;
+
+    /** Соцращенное название филиала */
+    private String shortName;
+
     /** Адрес филиала */
     private String address;
 
@@ -35,15 +43,31 @@ public class Branches extends BaseEntity {
     /** Список врачей, которые закреплены под филиалом */
     private List<Doctor> doctors;
 
+    /** Список услуг, которые есть в филиалы */
+    private Set<AppointmentType> services;
+
     /**
      * Конструктор по умолчанию, необходимый для работы JPA.
      */
     public Branches() {}
 
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getShortName() {
+        return shortName;
+    }
+    public void setShortName(String shortName) {
+        this.shortName = shortName;
+    }
+
     public String getAddress() {
         return address;
     }
-
     public void setAddress(String address) {
         this.address = address;
     }
@@ -51,7 +75,6 @@ public class Branches extends BaseEntity {
     public String getPhone() {
         return phone;
     }
-
     public void setPhone(String phone) {
         this.phone = phone;
     }
@@ -59,17 +82,14 @@ public class Branches extends BaseEntity {
     public String getEmail() {
         return email;
     }
-
     public void setEmail(String email) {
         this.email = email;
     }
 
-    //@Column(columnDefinition = "geometry(Point, 4326) using coordinates::geometry(Point, 4326)")
     @Column(columnDefinition = "geometry(Point, 4326)")
     public Point getCoordinates() {
         return coordinates;
     }
-
     public void setCoordinates(Point coordinates) {
         this.coordinates = coordinates;
     }
@@ -78,8 +98,21 @@ public class Branches extends BaseEntity {
     public List<Doctor> getDoctors() {
         return doctors;
     }
-
     public void setDoctors(List<Doctor> doctors) {
         this.doctors = doctors;
+    }
+
+    @ElementCollection(targetClass = AppointmentType.class, fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "branches_services",
+            joinColumns = @JoinColumn(name = "branch_id")
+    )
+    @Column(name = "service", nullable = false)
+    @Enumerated(EnumType.STRING)
+    public Set<AppointmentType> getServices() {
+        return services;
+    }
+    public void setServices(Set<AppointmentType> services) {
+        this.services = services;
     }
 }

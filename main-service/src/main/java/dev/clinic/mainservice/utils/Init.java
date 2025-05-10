@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Date;
+import java.util.Set;
 
 @Component
 public class Init implements CommandLineRunner {
@@ -164,21 +165,39 @@ public class Init implements CommandLineRunner {
         Coordinate coordinate = new Coordinate(longitude, latitude);
         Point point = geometryFactory.createPoint(new CoordinateArraySequence(new Coordinate[]{coordinate}));
 
+        Set<AppointmentType> services1 = Set.of(
+                AppointmentType.CONSULTATION,
+                AppointmentType.VACCINATION,
+                AppointmentType.XRAY
+        );
+
+        Set<AppointmentType> services2 = Set.of(
+                AppointmentType.SURGERY,
+                AppointmentType.INSPECTION,
+                AppointmentType.CHIPPING
+        );
+
         if (branchesRepository.findByEmail("branch1@mail.ru").isEmpty()) {
             Branches branch1 = new Branches();
+            branch1.setName("Территориальное ветеринарное управление № 5, Ленинская ветеринарная станция");
+            branch1.setShortName("Территориальное ветеринарное управление № 5");
             branch1.setAddress("Гагаринский пер., 29, Москва");
             branch1.setPhone("79999999999");
             branch1.setEmail("branch1@mail.ru");
             branch1.setCoordinates(point);
+            branch1.setServices(services1);
             branchesRepository.save(branch1);
         }
 
         if (branchesRepository.findByEmail("branch2@mail.ru").isEmpty()) {
             Branches branch2 = new Branches();
+            branch2.setName("Территориальное ветеринарное управление № 75, Боровицкая ветеринарная станция");
+            branch2.setShortName("Территориальное ветеринарное управление № 75");
             branch2.setAddress("Хрущевский пер., 16, Москва, 185747");
             branch2.setPhone("79999999999");
             branch2.setEmail("branch2@mail.ru");
             branch2.setCoordinates(point);
+            branch2.setServices(services2);
             branchesRepository.save(branch2);
         }
     }
@@ -203,6 +222,7 @@ public class Init implements CommandLineRunner {
             doctor1.setSpecialization("Хиурург");
             doctor1.setFirstName("Михаил");
             doctor1.setLastName("Михайлов");
+            doctor1.setPatronymic("Михайлович");
             doctor1.setPassword(passwordEncoder.encode("123456789"));
             doctor1.setDateOfBirth(LocalDate.of(1977, 5, 5));
             doctor1.setNumberPhone("79999999999");
@@ -219,7 +239,8 @@ public class Init implements CommandLineRunner {
             doctor2.setEducation("МГУ");
             doctor2.setSpecialization("Хиурург");
             doctor2.setFirstName("Никита");
-            doctor2.setLastName("Алексеевич");
+            doctor2.setLastName("Алексеев");
+            doctor2.setPatronymic("Алексеевич");
             doctor2.setPassword(passwordEncoder.encode("123456789"));
             doctor2.setDateOfBirth(LocalDate.of(1980, 5, 5));
             doctor2.setNumberPhone("79999999999");

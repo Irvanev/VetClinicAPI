@@ -1,10 +1,7 @@
 package dev.clinic.mainservice.controllers;
 
 import dev.clinic.mainservice.dtos.auth.ChangePasswordRequest;
-import dev.clinic.mainservice.dtos.users.DoctorRequest;
-import dev.clinic.mainservice.dtos.users.DoctorResponseForSelectInAppointment;
-import dev.clinic.mainservice.dtos.users.EditClientRequest;
-import dev.clinic.mainservice.dtos.users.UserResponse;
+import dev.clinic.mainservice.dtos.users.*;
 import dev.clinic.mainservice.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -111,7 +108,7 @@ public class UserController {
             }
     )
     @PostMapping("/doctors")
-    public ResponseEntity<UserResponse> createDoctor(
+    public ResponseEntity<DoctorResponse> createDoctor(
             @Parameter(description = "Данные нового врача", required = true)
             @Valid @RequestBody DoctorRequest doctorRequest) {
         return new ResponseEntity<>(userService.createDoctor(doctorRequest), HttpStatus.CREATED);

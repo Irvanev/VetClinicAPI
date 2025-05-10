@@ -2,9 +2,11 @@ package dev.clinic.mainservice.controllers;
 
 import dev.clinic.mainservice.dtos.branches.BranchRequest;
 import dev.clinic.mainservice.dtos.branches.BranchResponse;
+import dev.clinic.mainservice.models.enums.AppointmentType;
 import dev.clinic.mainservice.services.BranchesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -73,6 +75,20 @@ public class BranchesController {
     ) {
         BranchResponse branch = branchesService.getBranchById(id);
         return new ResponseEntity<>(branch, HttpStatus.OK);
+    }
+
+    @Operation(
+            summary = "Найти филиалы по услуге",
+            description = "Возвращает все филиалы, где доступна указанная услуга"
+    )
+    @GetMapping("/by-service/{service}")
+    public ResponseEntity<List<BranchResponse>> getByService(
+            @Parameter(description = "Название услуги", required = true,
+                    schema = @Schema(type = "string", example = "CONSULTATION"))
+            @PathVariable("service") AppointmentType service
+    ) {
+        List<BranchResponse> list = branchesService.getAllBranchesByServiceName(service);
+        return new ResponseEntity<>(list, HttpStatus.OK);
     }
 
     @Operation(

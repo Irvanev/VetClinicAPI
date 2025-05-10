@@ -3,10 +3,12 @@ package dev.clinic.mainservice.controllers;
 import dev.clinic.mainservice.dtos.appointments.AppointmentRequest;
 import dev.clinic.mainservice.dtos.appointments.AppointmentResponse;
 import dev.clinic.mainservice.dtos.appointments.AppointmentResponseOwner;
+import dev.clinic.mainservice.models.enums.AppointmentStatus;
 import dev.clinic.mainservice.models.enums.AppointmentType;
 import dev.clinic.mainservice.services.AppointmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -78,6 +80,15 @@ public class AppointmentController {
         return new ResponseEntity<>(appointmentService.getAllOwnerAppointments(), HttpStatus.OK);
     }
 
+    @GetMapping("/owner/{status}")
+    public ResponseEntity<List<AppointmentResponseOwner>> getOwnerAppointmentsByStatus(
+            @Parameter(description = "Статус приема", required = true,
+                    schema = @Schema(type = "string", example = "SCHEDULED"))
+            @PathVariable("status") AppointmentStatus status
+    ) {
+        return new ResponseEntity<>(appointmentService.getAllOwnerAppointmentsByStatus(status), HttpStatus.OK);
+    }
+
     @Operation(
             summary = "Получить доступные временные слоты",
             description = "Возвращает список свободного времени для записи",
@@ -98,5 +109,22 @@ public class AppointmentController {
             @RequestParam AppointmentType type
     ) {
         return new ResponseEntity<>(appointmentService.getAvailableTimeSlots(doctorId, date, type), HttpStatus.OK);
+    }
+
+    @Operation(
+            summary = "Отменить запись на прием",
+            description = "Отменяет запись на прием во его ID",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Успешное получение данных"),
+                    @ApiResponse(responseCode = "400", description = "Некорректные параметры запроса")
+            }
+    )
+    @PutMapping("/cancel/{id}")
+    public ResponseEntity<Void> cancelAppointment(
+            @Parameter(description = "Уникальный идетификатор приема", required = true)
+            @PathVariable Long id
+    ) {
+        appointmentService.cancelAppointment(id);
+         return new ResponseEntity<>(null, HttpStatus.OK);
     }
 }

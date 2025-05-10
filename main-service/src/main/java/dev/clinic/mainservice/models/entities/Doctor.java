@@ -16,6 +16,9 @@ import jakarta.persistence.*;
 @Table(name = "doctors")
 public class Doctor extends User {
 
+    /** Отчество врача. */
+    private String patronymic;
+
     /** Специализация врача */
     private String specialization;
 
@@ -36,10 +39,16 @@ public class Doctor extends User {
      */
     public Doctor() {}
 
+    public String getPatronymic() {
+        return patronymic;
+    }
+    public void setPatronymic(String patronymic) {
+        this.patronymic = patronymic;
+    }
+
     public String getSpecialization() {
         return specialization;
     }
-
     public void setSpecialization(String specialization) {
         this.specialization = specialization;
     }
@@ -47,7 +56,6 @@ public class Doctor extends User {
     public String getAddress() {
         return address;
     }
-
     public void setAddress(String address) {
         this.address = address;
     }
@@ -55,7 +63,6 @@ public class Doctor extends User {
     public String getEducation() {
         return education;
     }
-
     public void setEducation(String education) {
         this.education = education;
     }
@@ -63,7 +70,6 @@ public class Doctor extends User {
     public String getPhoto() {
         return photo;
     }
-
     public void setPhoto(String photo) {
         this.photo = photo;
     }

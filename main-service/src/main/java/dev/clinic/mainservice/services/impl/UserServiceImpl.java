@@ -3,6 +3,7 @@ package dev.clinic.mainservice.services.impl;
 import dev.clinic.mainservice.dtos.auth.ChangePasswordRequest;
 import dev.clinic.mainservice.dtos.users.*;
 import dev.clinic.mainservice.exceptions.ResourceNotFoundException;
+import dev.clinic.mainservice.mapping.DoctorMapping;
 import dev.clinic.mainservice.mapping.UserMapping;
 import dev.clinic.mainservice.models.entities.*;
 import dev.clinic.mainservice.models.enums.RoleEnum;
@@ -104,7 +105,6 @@ public class UserServiceImpl implements UserService {
         return modelMapper.map(user, UserResponse.class);
     }
 
-    @Cacheable("users")
     @Override
     public UserDetailResponse getPrincipalUser() {
         String ownerEmail = authUtil.getPrincipalEmail();
@@ -136,7 +136,7 @@ public class UserServiceImpl implements UserService {
 
     @CacheEvict(value = "users", allEntries = true)
     @Override
-    public UserResponse createDoctor(DoctorRequest request) {
+    public DoctorResponse createDoctor(DoctorRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("User already exists");
         }
@@ -161,7 +161,7 @@ public class UserServiceImpl implements UserService {
 
         emailService.sendPasswordEmail(request.getEmail(), temporaryPassword);
 
-        return modelMapper.map(doctor, UserResponse.class);
+        return DoctorMapping.toResponse(doctor);
     }
 
     @Cacheable("users")

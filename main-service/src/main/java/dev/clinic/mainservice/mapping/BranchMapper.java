@@ -10,6 +10,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,11 +26,18 @@ public class BranchMapper {
         branch.setAddress(branchRequest.getAddress());
         branch.setPhone(branchRequest.getPhone());
         branch.setEmail(branchRequest.getEmail());
+        branch.setName(branchRequest.getName());
+        branch.setShortName(branchRequest.getShortName());
         Point point = createPoint(
                 branchRequest.getLongitude(),
                 branchRequest.getLatitude()
         );
         branch.setCoordinates(point);
+
+        if (branchRequest.getServices() != null) {
+            branch.setServices(new HashSet<>(branchRequest.getServices()));
+        }
+
         return branch;
     }
 
@@ -44,6 +52,13 @@ public class BranchMapper {
         branchResponse.setEmail(branches.getEmail());
         branchResponse.setLatitude(branches.getCoordinates().getY());
         branchResponse.setLongitude(branches.getCoordinates().getX());
+        branchResponse.setName(branches.getName());
+        branchResponse.setShortName(branches.getShortName());
+
+        if (branches.getServices() != null) {
+            branchResponse.setServices(new HashSet<>(branches.getServices()));
+        }
+
         return branchResponse;
     }
 

@@ -129,6 +129,23 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     }
 
+    @Override
+    public void cancelAppointment(Long appointmentId) {
+        log.info("Start canceling appointment with id {}", appointmentId);
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
+
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            log.warn("Attempt to cancel an already canceled appointment with id {}", appointmentId);
+            throw new IllegalStateException("Appointment is already canceled");
+        }
+
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+        appointmentRepository.save(appointment);
+
+        log.info("Appointment with id {} has been canceled by owner ", appointmentId);
+    }
+
 
     @Override
     @Cacheable(value = "appointments", key = "#id")
@@ -146,6 +163,22 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Owner not found with email: " + ownerEmail));
 
         List<Appointment> appointments = appointmentRepository.findAllByClientEmail(owner.getEmail());
+        return appointments
+                .stream()
+                .map(AppointmentMapper::toResponseOwner)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Cacheable("appointmentsList")
+    public List<AppointmentResponseOwner> getAllOwnerAppointmentsByStatus(AppointmentStatus status) {
+
+        String ownerEmail = authUtil.getPrincipalEmail();
+
+        Client owner = clientRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Owner not found with email: " + ownerEmail));
+
+        List<Appointment> appointments = appointmentRepository.findAllByClientEmailAndStatusOrderByAppointmentDateDescAppointmentStartTimeDesc(owner.getEmail(), status);
         return appointments
                 .stream()
                 .map(AppointmentMapper::toResponseOwner)

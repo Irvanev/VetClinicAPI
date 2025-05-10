@@ -45,11 +45,9 @@ public class Appointment extends BaseEntity {
     private LocalTime appointmentEndTime;
 
     /** Тип приема */
-    @Enumerated(EnumType.STRING)
     private AppointmentType appointmentType;
 
     /** Статус приема */
-    @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
 
     /** Описание (доп. информация к приему) */
@@ -83,7 +81,6 @@ public class Appointment extends BaseEntity {
     public Pet getPet() {
         return pet;
     }
-
     public void setPet(Pet pet) {
         this.pet = pet;
     }
@@ -91,7 +88,6 @@ public class Appointment extends BaseEntity {
     public LocalDate getAppointmentDate() {
         return appointmentDate;
     }
-
     public void setAppointmentDate(LocalDate appointmentDate) {
         this.appointmentDate = appointmentDate;
     }
@@ -99,7 +95,6 @@ public class Appointment extends BaseEntity {
     public LocalTime getAppointmentStartTime() {
         return appointmentStartTime;
     }
-
     public void setAppointmentStartTime(LocalTime appointmentStartTime) {
         this.appointmentStartTime = appointmentStartTime;
     }
@@ -107,23 +102,22 @@ public class Appointment extends BaseEntity {
     public LocalTime getAppointmentEndTime() {
         return appointmentEndTime;
     }
-
     public void setAppointmentEndTime(LocalTime appointmentEndTime) {
         this.appointmentEndTime = appointmentEndTime;
     }
 
+    @Enumerated(EnumType.STRING)
     public AppointmentType getAppointmentType() {
         return appointmentType;
     }
-
     public void setAppointmentType(AppointmentType appointmentType) {
         this.appointmentType = appointmentType;
     }
 
+    @Enumerated(EnumType.STRING)
     public AppointmentStatus getStatus() {
         return status;
     }
-
     public void setStatus(AppointmentStatus status) {
         this.status = status;
     }
@@ -131,7 +125,6 @@ public class Appointment extends BaseEntity {
     public String getComments() {
         return comments;
     }
-
     public void setComments(String comments) {
         this.comments = comments;
     }

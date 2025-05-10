@@ -9,9 +9,11 @@ import java.time.LocalTime;
 public class AppointmentResponseOwner {
     private Long id;
     private Long doctorId;
+    private String doctorPhoto;
     private String doctorName;
     private Long petId;
     private String petName;
+    private String branchName;
     private LocalDate appointmentDate;
     private LocalTime appointmentStartTime;
     private String appointmentType;
@@ -42,6 +44,14 @@ public class AppointmentResponseOwner {
         this.doctorName = doctorName;
     }
 
+    @Schema(description = "Фото врача", example = "http://localhost:9000/image/name_photo.jpg")
+    public String getDoctorPhoto() {
+        return doctorPhoto;
+    }
+    public void setDoctorPhoto(String doctorPhoto) {
+        this.doctorPhoto = doctorPhoto;
+    }
+
     @Schema(description = "Уникальный идентификатор питомца", example = "1")
     public Long getPetId() {
         return petId;
@@ -56,6 +66,14 @@ public class AppointmentResponseOwner {
     }
     public void setPetName(String petName) {
         this.petName = petName;
+    }
+
+    @Schema(description = "Название филиала", example = "Территориальное ветеринарное управление № 5, Ленинская ветеринарная станция")
+    public String getBranchName() {
+        return branchName;
+    }
+    public void setBranchName(String branchName) {
+        this.branchName = branchName;
     }
 
     @Schema(description = "Дата приема", example = "2023-10-01")

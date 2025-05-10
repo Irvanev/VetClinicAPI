@@ -10,6 +10,7 @@ import java.util.List;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
     List<Appointment> findAllByClientEmail(String email);
+    List<Appointment> findAllByClientEmailAndStatusOrderByAppointmentDateDescAppointmentStartTimeDesc(String email, AppointmentStatus status);
     List<Appointment> findAllByClientIdOrderByAppointmentDateDesc(Long id);
     List<Appointment> findAllByPetIdOrderByAppointmentDateDesc(Long id);
     List<Appointment> findByDoctorIdAndAppointmentDateBetween(Long doctorId, LocalDate start, LocalDate end);

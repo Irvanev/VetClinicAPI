@@ -1,16 +1,38 @@
 package dev.clinic.mainservice.dtos.branches;
 
+import dev.clinic.mainservice.models.enums.AppointmentType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.locationtech.jts.geom.Point;
 
+import java.util.Set;
+
 @Schema(description = "Получение филиала(отделения)")
 public class BranchResponse {
+    private String name;
+    private String shortName;
     private Long id;
     private String address;
     private String phone;
     private String email;
     private double latitude;
     private double longitude;
+    private Set<AppointmentType> services;
+
+    @Schema(description = "Полное название филиала", example = "Территориальное ветеринарное управление № 5, Ленинская ветеринарная станция")
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Schema(description = "Короткое название филиала", example = "Территориальное ветеринарное управление № 5")
+    public String getShortName() {
+        return shortName;
+    }
+    public void setShortName(String shortName) {
+        this.shortName = shortName;
+    }
 
     @Schema(description = "Уникальный идентификатор филиала", example = "1")
     public Long getId() {
@@ -58,5 +80,13 @@ public class BranchResponse {
     }
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    @Schema(description = "Список предосталвяемых услуг")
+    public Set<AppointmentType> getServices() {
+        return services;
+    }
+    public void setServices(Set<AppointmentType> services) {
+        this.services = services;
     }
 }

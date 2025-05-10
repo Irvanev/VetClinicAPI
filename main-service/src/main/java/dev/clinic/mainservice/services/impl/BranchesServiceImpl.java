@@ -6,6 +6,7 @@ import dev.clinic.mainservice.mapping.AppointmentMapper;
 import dev.clinic.mainservice.mapping.BranchMapper;
 import dev.clinic.mainservice.models.entities.Appointment;
 import dev.clinic.mainservice.models.entities.Branches;
+import dev.clinic.mainservice.models.enums.AppointmentType;
 import dev.clinic.mainservice.repositories.BranchesRepository;
 import dev.clinic.mainservice.services.BranchesService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BranchesServiceImpl implements BranchesService {
@@ -31,6 +33,18 @@ public class BranchesServiceImpl implements BranchesService {
     public List<BranchResponse> getAllBranches() {
         List<Branches> branches = branchesRepository.findAll();
         return BranchMapper.toResponseList(branches);
+    }
+
+    @Override
+    public List<BranchResponse> getAllBranchesByServiceName(AppointmentType service) {
+        if (service == null) {
+            throw new IllegalArgumentException("Service must not be null");
+        }
+
+        List<Branches> branches = branchesRepository.getAllBranchesByServicesContains(service);
+        return branches.stream()
+                .map(BranchMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override

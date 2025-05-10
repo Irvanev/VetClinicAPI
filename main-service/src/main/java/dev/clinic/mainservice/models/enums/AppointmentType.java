@@ -1,6 +1,9 @@
 package dev.clinic.mainservice.models.enums;
 
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import java.time.Duration;
 
 public enum AppointmentType {
@@ -34,11 +37,22 @@ public enum AppointmentType {
         this.number = number;
     }
 
+    @JsonValue
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @JsonCreator
+    public static AppointmentType fromName(String name) {
+        for (AppointmentType type : values()) {
+            if (type.name.equalsIgnoreCase(name.trim())) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Unknown AppointmentType: " + name);
     }
 }

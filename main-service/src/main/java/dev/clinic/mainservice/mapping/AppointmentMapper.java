@@ -94,7 +94,7 @@ public class AppointmentMapper {
 
         if (appointment.getDoctor() != null) {
             response.setDoctorId(appointment.getDoctor().getId());
-            response.setDoctorName(appointment.getDoctor().getFirstName() + " " + appointment.getDoctor().getLastName());
+            response.setDoctorName(appointment.getDoctor().getLastName() + " " + appointment.getDoctor().getFirstName() + " " + appointment.getDoctor().getPatronymic());
         }
 
         if (appointment.getPet() != null) {
@@ -103,10 +103,12 @@ public class AppointmentMapper {
         }
 
         response.setAppointmentDate(appointment.getAppointmentDate());
+        response.setAppointmentStartTime(appointment.getAppointmentStartTime());
         response.setAppointmentType(appointment.getAppointmentType().getName());
         response.setStatus(appointment.getStatus().getName());
         response.setComments(appointment.getComments());
-
+        response.setDoctorPhoto(appointment.getDoctor().getPhoto());
+        response.setBranchName(appointment.getDoctor().getBranch().getShortName());
         return response;
     }
 }
