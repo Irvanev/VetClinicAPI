@@ -83,7 +83,7 @@ public class AppointmentController {
     @GetMapping("/owner/{status}")
     public ResponseEntity<List<AppointmentResponseOwner>> getOwnerAppointmentsByStatus(
             @Parameter(description = "Статус приема", required = true,
-                    schema = @Schema(type = "string", example = "SCHEDULED"))
+                    schema = @Schema(type = "string", example = "Запланирован"))
             @PathVariable("status") AppointmentStatus status
     ) {
         return new ResponseEntity<>(appointmentService.getAllOwnerAppointmentsByStatus(status), HttpStatus.OK);

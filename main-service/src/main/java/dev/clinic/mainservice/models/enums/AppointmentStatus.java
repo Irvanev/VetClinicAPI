@@ -1,5 +1,8 @@
 package dev.clinic.mainservice.models.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum AppointmentStatus {
     SCHEDULED(1, "Запланирован"),   // Запланирован
     COMPLETED(2, "Завершён"),   // Завершён
@@ -22,11 +25,22 @@ public enum AppointmentStatus {
         this.number = number;
     }
 
+    @JsonValue
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @JsonCreator
+    public static AppointmentStatus fromName(String name) {
+        for (AppointmentStatus status : values()) {
+            if (status.name.equalsIgnoreCase(name.trim())) {
+                return status;
+            }
+        }
+        throw new IllegalArgumentException("Unknown AppointmentType: " + name);
     }
 }

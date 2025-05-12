@@ -29,13 +29,18 @@ public class EmailService {
             helper.setTo(toEmail);
             helper.setSubject("Подтверждение регистрации");
 
-            String content = "<html>"
-                    + "<body>"
-                    + "<h1>Добро пожаловать!</h1>"
-                    + "<p>Ваш код подтверждения: <strong>" + verificationCode + "</strong></p>"
-                    + "<p>Спасибо за регистрацию в нашем сервисе.</p>"
-                    + "</body>"
-                    + "</html>";
+            String content =
+                    "<html>" +
+                    "<body style='font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;'>" +
+                    "<div style='background-color: #fff; padding: 30px; border-radius: 8px; max-width: 600px; margin: auto;'>" +
+                    "<h2 style='color: #4CAF50;'>Подтверждение регистрации</h2>" +
+                    "<p>Здравствуйте! Спасибо за регистрацию в нашем сервисе.</p>" +
+                    "<p>Ваш код подтверждения:</p>" +
+                    "<div style='font-size: 24px; font-weight: bold; color: #4CAF50; margin: 20px 0;'>" + verificationCode + "</div>" +
+                    "<p>Если вы не запрашивали это письмо, просто проигнорируйте его.</p>" +
+                    "</div>" +
+                    "</body>" +
+                    "</html>";
 
             helper.setText(content, true);
             mailSender.send(mimeMessage);
