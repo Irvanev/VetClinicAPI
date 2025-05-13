@@ -67,7 +67,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    @CacheEvict(value = {"appointments", "appointmentsList"}, allEntries = true)
     public void createAppointment(AppointmentRequest appointmentRequest) {
         String ownerEmail = authUtil.getPrincipalEmail();
         log.info("START make an appointment: email={}", ownerEmail);
@@ -114,7 +113,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    @CacheEvict(value = {"appointments", "appointmentsList"}, allEntries = true)
     public void createAppointmentAdmin(AppointmentAdminRequest appointmentAdminRequest) {
         Client owner = clientRepository.findById(appointmentAdminRequest.getClintId())
                 .orElseThrow(() -> new ResourceNotFoundException("Owner not found with email: " + appointmentAdminRequest.getClintId()));
@@ -148,13 +146,11 @@ public class AppointmentServiceImpl implements AppointmentService {
 
 
     @Override
-    @Cacheable(value = "appointments", key = "#id")
     public AppointmentResponse getAppointmentById(Long id) {
         return AppointmentMapper.toResponse(appointmentRepository.findById(id).orElseThrow());
     }
 
     @Override
-    @Cacheable("appointmentsList")
     public List<AppointmentResponseOwner> getAllOwnerAppointments() {
 
         String ownerEmail = authUtil.getPrincipalEmail();
@@ -170,7 +166,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    @Cacheable("appointmentsList")
     public List<AppointmentResponseOwner> getAllOwnerAppointmentsByStatus(AppointmentStatus status) {
 
         String ownerEmail = authUtil.getPrincipalEmail();
@@ -186,7 +181,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    @Cacheable(value = "appointmentsList", key = "#ownerId")
     public List<AppointmentResponseOwner> getAllAppointmentsByOwnerId(Long ownerId) {
         if (ownerId == null || ownerId <= 0) {
             throw new IllegalArgumentException("Invalid ownerId: " + ownerId);
@@ -206,7 +200,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    @Cacheable(value = "appointmentsList", key = "#petId")
     public List<AppointmentResponseOwner> getAllOwnerAppointmentsByPetId(Long petId) {
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));

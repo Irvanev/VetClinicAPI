@@ -15,22 +15,15 @@ public class MedicalRecordsMapping {
         MedicalRecordResponse response = new MedicalRecordResponse();
 
         response.setId(medicalRecord.getId());
+        response.setDate(medicalRecord.getAppointment().getAppointmentDate());
+        response.setTime(medicalRecord.getAppointment().getAppointmentStartTime());
+        response.setBranchShortName(medicalRecord.getDoctor().getBranch().getShortName());
+        response.setPhotoDoctor(medicalRecord.getDoctor().getPhoto());
+        response.setDoctorName(medicalRecord.getDoctor().getLastName() + " " + medicalRecord.getDoctor().getFirstName() + " " + medicalRecord.getDoctor().getPatronymic());
+        response.setType(medicalRecord.getAppointment().getAppointmentType());
         response.setDiagnosis(medicalRecord.getDiagnosis());
         response.setTreatment(medicalRecord.getTreatment());
         response.setNotes(medicalRecord.getNotes());
-
-        if (medicalRecord.getDoctor() != null) {
-            response.setDoctorId(medicalRecord.getDoctor().getId());
-        }
-        if (medicalRecord.getPet() != null) {
-            response.setPetId(medicalRecord.getPet().getId());
-        }
-        if (medicalRecord.getClient() != null) {
-            response.setClientId(medicalRecord.getClient().getId());
-        }
-        if (medicalRecord.getAppointment() != null) {
-            response.setAppointmentId(medicalRecord.getAppointment().getId());
-        }
 
         return response;
     }

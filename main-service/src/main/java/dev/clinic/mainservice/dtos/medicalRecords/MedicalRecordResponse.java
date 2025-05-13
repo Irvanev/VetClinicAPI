@@ -1,14 +1,20 @@
 package dev.clinic.mainservice.dtos.medicalRecords;
 
+import dev.clinic.mainservice.models.enums.AppointmentType;
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Schema(description = "Получение медицинской записи")
 public class MedicalRecordResponse {
     private Long id;
-    private Long doctorId;
-    private Long clientId;
-    private Long petId;
-    private Long appointmentId;
+    private String doctorName;
+    private String photoDoctor;
+    private String branchShortName;
+    private LocalDate date;
+    private LocalTime time;
+    private AppointmentType type;
     private String diagnosis;
     private String treatment;
     private String notes;
@@ -21,36 +27,52 @@ public class MedicalRecordResponse {
         this.id = id;
     }
 
-    @Schema(description = "Уникальный идентификатор врача", example = "1")
-    public Long getDoctorId() {
-        return doctorId;
+    @Schema(description = "ФИО доктора", example = "Иванов Иван Иванович")
+    public String getDoctorName() {
+        return doctorName;
     }
-    public void setDoctorId(Long doctorId) {
-        this.doctorId = doctorId;
-    }
-
-    @Schema(description = "Уникальный идентификатор клиента", example = "1")
-    public Long getClientId() {
-        return clientId;
-    }
-    public void setClientId(Long clientId) {
-        this.clientId = clientId;
+    public void setDoctorName(String doctorName) {
+        this.doctorName = doctorName;
     }
 
-    @Schema(description = "Уникальный идентификатор питомца", example = "1")
-    public Long getPetId() {
-        return petId;
+    @Schema(description = "Ссылка на фотографию доктора", example = "http://localhost:9000/images/doctor_photo.jpg")
+    public String getPhotoDoctor() {
+        return photoDoctor;
     }
-    public void setPetId(Long petId) {
-        this.petId = petId;
+    public void setPhotoDoctor(String photoDoctor) {
+        this.photoDoctor = photoDoctor;
     }
 
-    @Schema(description = "Уникальный идентификатор приема", example = "1")
-    public Long getAppointmentId() {
-        return appointmentId;
+    @Schema(description = "Название поликлиника (укороченное)", example = "Поликлина Лапа №5")
+    public String getBranchShortName() {
+        return branchShortName;
     }
-    public void setAppointmentId(Long appointmentId) {
-        this.appointmentId = appointmentId;
+    public void setBranchShortName(String branchShortName) {
+        this.branchShortName = branchShortName;
+    }
+
+    @Schema(description = "Дата проведенеия приема", example = "2025-05-10")
+    public LocalDate getDate() {
+        return date;
+    }
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+    @Schema(description = "Время проведения приема", example = "13:30")
+    public LocalTime getTime() {
+        return time;
+    }
+    public void setTime(LocalTime time) {
+        this.time = time;
+    }
+
+    @Schema(description = "Тип услуги", example = "Чипирование")
+    public AppointmentType getType() {
+        return type;
+    }
+    public void setType(AppointmentType type) {
+        this.type = type;
     }
 
     @Schema(description = "Диагноз", example = "Почечная недостаточность")

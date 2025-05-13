@@ -29,7 +29,6 @@ public class BranchesServiceImpl implements BranchesService {
     }
 
     @Override
-    @Cacheable("branchesList")
     public List<BranchResponse> getAllBranches() {
         List<Branches> branches = branchesRepository.findAll();
         return BranchMapper.toResponseList(branches);
@@ -48,7 +47,6 @@ public class BranchesServiceImpl implements BranchesService {
     }
 
     @Override
-    @CacheEvict(value = {"branches", "branchesList"}, allEntries = true)
     public BranchResponse createBranch(BranchRequest branchRequest) {
         Branches branch = BranchMapper.toRequest(branchRequest);
 
@@ -57,7 +55,6 @@ public class BranchesServiceImpl implements BranchesService {
     }
 
     @Override
-    @Cacheable(value = "branches", key = "#id")
     public BranchResponse getBranchById(Long id) {
         Branches branch = branchesRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Branch not found with id: " + id));
@@ -66,12 +63,6 @@ public class BranchesServiceImpl implements BranchesService {
     }
 
     @Override
-    @Caching(
-            evict = {
-                    @CacheEvict(value = "branches", key = "#id"),
-                    @CacheEvict(value = "branchesList", allEntries = true)
-            }
-    )
     public BranchResponse editBranch(Long id, BranchRequest branchRequest) {
         Branches branch = branchesRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Branch not found with id: " + id));
@@ -81,12 +72,6 @@ public class BranchesServiceImpl implements BranchesService {
     }
 
     @Override
-    @Caching(
-            evict = {
-                @CacheEvict(value = "branches", key = "#id"),
-                @CacheEvict(value = "branchesList", allEntries = true)
-        }
-    )
     public boolean deleteBranch(Long id) {
         Branches branch = branchesRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Branch not found with id: " + id));

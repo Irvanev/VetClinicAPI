@@ -9,14 +9,13 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.impl.CoordinateArraySequence;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Date;
 import java.util.Set;
 
 @Component
@@ -30,6 +29,7 @@ public class Init implements CommandLineRunner {
     private final BranchesRepository branchesRepository;
     private final DoctorRepository doctorRepository;
     private final AppointmentRepository appointmentRepository;
+    private final MedicalRecordsRepository medicalRecordsRepository;
 
     public Init(
             RoleRepository roleRepository,
@@ -39,7 +39,9 @@ public class Init implements CommandLineRunner {
             PetRepository petRepository,
             BranchesRepository branchesRepository,
             DoctorRepository doctorRepository,
-            AppointmentRepository appointmentRepository) {
+            AppointmentRepository appointmentRepository,
+            MedicalRecordsRepository medicalRecordsRepository
+    ) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -48,6 +50,7 @@ public class Init implements CommandLineRunner {
         this.branchesRepository = branchesRepository;
         this.doctorRepository = doctorRepository;
         this.appointmentRepository = appointmentRepository;
+        this.medicalRecordsRepository = medicalRecordsRepository;
     }
 
     @Override
@@ -264,8 +267,10 @@ public class Init implements CommandLineRunner {
         Doctor doctor2 = doctorRepository.findByEmail("memas03@mail.ru")
                 .orElseThrow(() -> new IllegalStateException("Doctor not found: memas03@mail.ru"));
 
+        Appointment appointment1 = new Appointment();
+        Appointment appointment2 = new Appointment();
+
         if (appointmentRepository.count() == 0) {
-            Appointment appointment1 = new Appointment();
             appointment1.setAppointmentType(AppointmentType.CONSULTATION);
             appointment1.setAppointmentDate(LocalDate.of(2025, 5, 10));
             appointment1.setAppointmentStartTime(LocalTime.of(11, 30));
@@ -277,7 +282,6 @@ public class Init implements CommandLineRunner {
             appointment1.setClient(client);
             appointmentRepository.save(appointment1);
 
-            Appointment appointment2 = new Appointment();
             appointment2.setAppointmentType(AppointmentType.CHIPPING);
             appointment2.setAppointmentDate(LocalDate.of(2025, 5, 15));
             appointment2.setAppointmentStartTime(LocalTime.of(12, 30));
@@ -288,6 +292,19 @@ public class Init implements CommandLineRunner {
             appointment2.setPet(pet2);
             appointment2.setClient(client);
             appointmentRepository.save(appointment2);
+        }
+
+        if (medicalRecordsRepository.count() == 0) {
+            MedicalRecords record = new MedicalRecords();
+            record.setDoctor(doctor2);
+            record.setAppointment(appointment2);
+            record.setClient(client);
+            record.setRecordDate(LocalDateTime.now());
+            record.setDiagnosis("Почечная недостаточность");
+            record.setNotes("Повторный прием через неделю");
+            record.setTreatment("Пить таблетки 3 раза в день");
+            record.setPet(pet2);
+            medicalRecordsRepository.save(record);
         }
     }
 }

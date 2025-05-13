@@ -45,10 +45,10 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable("schedulesList")
     public List<ScheduleResponse> getAllSchedules() {
+        log.info("Fetching all schedules");
         List<Schedule> schedules = scheduleRepository.findAll();
-
+        log.debug("Found {} schedules", schedules.size());
         return schedules.stream()
                 .map(ScheduleMapper::toResponse)
                 .collect(Collectors.toList());
@@ -56,14 +56,15 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable("schedulesList")
     public List<ScheduleResponse> getAllSchedulesByDoctorId(Long doctorId) {
+        log.info("Fetching schedules for doctor id={}", doctorId);
         if (doctorId == null || doctorId <= 0) {
+            log.warn("Invalid doctorId passed: {}", doctorId);
             throw new IllegalArgumentException("Doctor id must be provided and greater than zero");
         }
 
         List<Schedule> schedules = scheduleRepository.findAllByDoctorId(doctorId);
-
+        log.debug("Doctor id={} has {} schedules", doctorId, schedules.size());
         return schedules.stream()
                 .map(ScheduleMapper::toResponse)
                 .collect(Collectors.toList());
@@ -71,13 +72,14 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable("schedules")
     public List<ScheduleResponse> getAllSchedulesByDoctorIdAndDate(Long doctorId, LocalDate date) {
+        log.info("Fetching schedules for doctor id={} on date={}", doctorId, date);
         if (doctorId == null || doctorId <= 0) {
+            log.warn("Invalid doctorId passed: {}", doctorId);
             throw new IllegalArgumentException("Doctor id must be provided and greater than zero");
         }
         List<Schedule> schedules = scheduleRepository.findAllByDoctorIdAndDate(doctorId, date);
-        log.info("Requesting schedules for doctor '{}' on date {}", doctorId, date);
+        log.debug("Doctor id={} on {} has {} schedules", doctorId, date, schedules.size());
         return schedules.stream()
                 .map(ScheduleMapper::toResponse)
                 .collect(Collectors.toList());
@@ -85,12 +87,11 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable("schedulesList")
     public List<ScheduleResponse> getAllPrincipalSchedules() {
         String userEmail = authUtil.getPrincipalEmail();
-        log.info("Requesting schedules for doctor '{}'", userEmail);
+        log.info("Fetching schedules for currently authenticated doctor '{}'", userEmail);
         List<Schedule> schedules = scheduleRepository.findAllByDoctorEmail(userEmail);
-
+        log.info("Fetching schedules for currently authenticated doctor '{}'", userEmail);
         return schedules.stream()
                 .map(ScheduleMapper::toResponse)
                 .collect(Collectors.toList());
@@ -98,12 +99,11 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "schedules")
     public List<ScheduleResponse> getAllPrincipalSchedulesByDate(LocalDate date) {
         String userEmail = authUtil.getPrincipalEmail();
-        log.info("Requesting schedules for doctor '{}' on date {}", userEmail, date);
+        log.info("Fetching schedules for doctor '{}' on date={}", userEmail, date);
         List<Schedule> schedules = scheduleRepository.findAllByDoctorEmailAndDate(userEmail, date);
-
+        log.debug("Doctor '{}' on {} has {} schedules", userEmail, date, schedules.size());
         return schedules.stream()
                 .map(ScheduleMapper::toResponse)
                 .collect(Collectors.toList());
@@ -111,47 +111,46 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"schedules", "schedulesList"}, allEntries = true)
     public ScheduleResponse createDoctorSchedule(ScheduleRequest request) {
+        log.info("Creating schedule for doctorId={} on date={} at {}",
+                request.getDoctorId(), request.getDate(), request.getStartTime());
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor with id " + request.getDoctorId() + " not found"));
+                .orElseThrow(() -> {
+                    log.error("Doctor not found with id={}", request.getDoctorId());
+                    return new ResourceNotFoundException("Doctor with id " + request.getDoctorId() + " not found");
+                });
 
         Schedule schedule = ScheduleMapper.fromRequest(request, doctor);
 
-        scheduleRepository.save(schedule);
+        Schedule saved = scheduleRepository.save(schedule);
+        log.info("Created schedule id={} for doctorId={}", saved.getId(), request.getDoctorId());
 
         return ScheduleMapper.toResponse(schedule);
     }
 
     @Override
     @Transactional
-    @Caching(
-            evict = {
-                    @CacheEvict(value = "schedules", key = "#id"),
-                    @CacheEvict(value = "schedulesList", allEntries = true)
-            }
-    )
     public void editDoctorSchedule(Long id, ScheduleRequest request) {
+        log.info("Editing schedule id={}", id);
         if (id == null || id <= 0) {
+            log.warn("Invalid schedule id passed for edit: {}", id);
             throw new IllegalArgumentException("Schedule id must be provided");
         }
     }
 
     @Override
     @Transactional
-    @Caching(
-            evict = {
-                    @CacheEvict(value = "schedules", key = "#id"),
-                    @CacheEvict(value = "schedulesList", allEntries = true)
-            }
-    )
     public void deleteDoctorSchedule(Long id) {
+        log.info("Deleting schedule id={}", id);
         if (id == null || id <= 0) {
+            log.warn("Invalid schedule id passed for delete: {}", id);
             throw new IllegalArgumentException("Schedule id must be provided and greater than zero");
         }
         try {
             scheduleRepository.deleteById(id);
+            log.info("Successfully deleted schedule id={}", id);
         } catch (EmptyResultDataAccessException ex) {
+            log.error("Failed to delete schedule id={}, not found", id);
             throw new ResourceNotFoundException("Schedule not found with id: " + id);
         }
     }
