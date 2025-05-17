@@ -15,13 +15,7 @@ import dev.clinic.mainservice.utils.AuthUtil;
 import org.hibernate.service.spi.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.dao.DataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -47,7 +41,6 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     private static final Logger log = LoggerFactory.getLogger(AppointmentServiceImpl.class);
 
-    @Autowired
     public AppointmentServiceImpl(
             AppointmentRepository appointmentRepository,
             ScheduleRepository scheduleRepository,
@@ -66,210 +59,422 @@ public class AppointmentServiceImpl implements AppointmentService {
         this.notificationsService = notificationsService;
     }
 
+    /**
+     * Создание прима (запись на прием) пользователем
+     *
+     * @param appointmentRequest объект для создания приема
+     */
     @Override
     public void createAppointment(AppointmentRequest appointmentRequest) {
         String ownerEmail = authUtil.getPrincipalEmail();
-        log.info("START make an appointment: email={}", ownerEmail);
+        log.info("START createAppointment: email={}, date={}, startTime={}",
+                ownerEmail,
+                appointmentRequest.getAppointmentDate(),
+                appointmentRequest.getAppointmentStartTime());
+        try {
+            LocalDateTime appointmentStartDateTime = appointmentRequest.getAppointmentDate()
+                    .atTime(appointmentRequest.getAppointmentStartTime());
+            if (appointmentStartDateTime.isBefore(LocalDateTime.now())) {
+                log.warn("Attempt to book past date: {}", appointmentStartDateTime);
+                throw new IllegalArgumentException("Нельзя записаться на время, которое уже прошло.");
+            }
 
-        LocalDateTime appointmentStartDateTime = appointmentRequest.getAppointmentDate()
-                .atTime(appointmentRequest.getAppointmentStartTime());
+            Client owner = clientRepository.findByEmail(ownerEmail)
+                    .orElseThrow(() -> {
+                        log.error("Owner not found: email={}", ownerEmail);
+                        return new ResourceNotFoundException("Owner not found with email: " + ownerEmail);
+                    });
 
-        if (appointmentStartDateTime.isBefore(LocalDateTime.now())) {
-            log.warn("Attempt to book a past date: {}", appointmentStartDateTime);
-            throw new IllegalArgumentException("Нельзя записаться на время, которое уже прошло.");
+            Pet pet = petRepository.findById(appointmentRequest.getPetId())
+                    .orElseThrow(() -> {
+                        log.error("Pet not found: id={}", appointmentRequest.getPetId());
+                        return new ResourceNotFoundException("Pet not found with id: " +
+                                appointmentRequest.getPetId());
+                    });
+
+            Doctor doctor = doctorRepository.findById(appointmentRequest.getDoctorId())
+                    .orElseThrow(() -> {
+                        log.error("Doctor not found: id={}", appointmentRequest.getDoctorId());
+                        return new ResourceNotFoundException("Doctor not found with id: " +
+                                appointmentRequest.getDoctorId());
+                    });
+
+            Appointment appointment = AppointmentMapper.fromRequest(
+                    appointmentRequest, owner, pet, doctor);
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("type", "appointment");
+            payload.put("date", appointmentRequest.getAppointmentDate());
+            payload.put("start_time", appointmentRequest.getAppointmentStartTime());
+            payload.put("name_doctor", doctor.getFirstName() + " " + doctor.getLastName());
+
+            notificationsService.sendNotificationEventAsString(
+                    owner.getId(),
+                    "Новое уведомление",
+                    "Вы записались на прием",
+                    payload
+            );
+
+            appointmentRepository.saveAndFlush(appointment);
+            log.info("END createAppointment: created for user={}, doctor={}",
+                    ownerEmail, doctor.getId());
+
+        } catch (IllegalArgumentException | ResourceNotFoundException ex) {
+            log.warn("Validation error in createAppointment: {}", ex.getMessage());
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Unexpected error in createAppointment", ex);
+            throw new ServiceException("Unexpected error while creating appointment", ex);
         }
-
-        Client owner = clientRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> {
-                    log.error("Owner not found with email: {}", ownerEmail);
-                    return new ResourceNotFoundException("Owner not found with email: " + ownerEmail);
-                });
-
-        Pet pet = petRepository.findById(appointmentRequest.getPetId())
-                .orElseThrow(() -> {
-                    log.error("Pet not found with id: {}", appointmentRequest.getPetId());
-                    return new ResourceNotFoundException("Pet not found with id: " + appointmentRequest.getPetId());
-                });
-
-        Doctor doctor = doctorRepository.findById(appointmentRequest.getDoctorId())
-                .orElseThrow(() -> {
-                    log.error("Doctor not found with id: {}", appointmentRequest.getDoctorId());
-                    return new ResourceNotFoundException("Doctor not found with id: " + appointmentRequest.getDoctorId());
-                });
-
-        Appointment appointment = AppointmentMapper.fromRequest(appointmentRequest, owner, pet, doctor);
-
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("type", "appointment");
-        payload.put("date", appointmentRequest.getAppointmentDate());
-        payload.put("start_time", appointmentRequest.getAppointmentStartTime());
-        payload.put("name_doctor", doctor.getFirstName() + " " + doctor.getLastName());
-
-
-        notificationsService.sendNotificationEventAsString(owner.getId(), "Новое уведомление", "Вы записались на прием", payload);
-
-        appointmentRepository.saveAndFlush(appointment);
-        log.info("Appointment created successfully for user: {}, doctor: {}", ownerEmail, doctor.getId());
     }
 
+    /**
+     * Создание приема администратором
+     *
+     * @param appointmentAdminRequest объект для создания приема
+     */
     @Override
     public void createAppointmentAdmin(AppointmentAdminRequest appointmentAdminRequest) {
-        Client owner = clientRepository.findById(appointmentAdminRequest.getClintId())
-                .orElseThrow(() -> new ResourceNotFoundException("Owner not found with email: " + appointmentAdminRequest.getClintId()));
-        Pet pet = petRepository.findById(appointmentAdminRequest.getPetId())
-                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + appointmentAdminRequest.getPetId()));
-        Doctor doctor = doctorRepository.findById(appointmentAdminRequest.getDoctorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + appointmentAdminRequest.getDoctorId()));
+        log.info("START createAppointmentAdmin: clientId={}, petId={}, doctorId={}",
+                appointmentAdminRequest.getClintId(),
+                appointmentAdminRequest.getPetId(),
+                appointmentAdminRequest.getDoctorId());
+        try {
+            Client owner = clientRepository.findById(appointmentAdminRequest.getClintId())
+                    .orElseThrow(() -> {
+                        log.error("Owner not found: id={}", appointmentAdminRequest.getClintId());
+                        return new ResourceNotFoundException("Owner not found with id: " +
+                                appointmentAdminRequest.getClintId());
+                    });
 
-        Appointment appointment = AppointmentMapper.fromAdminRequest(appointmentAdminRequest, owner, pet, doctor);
+            Pet pet = petRepository.findById(appointmentAdminRequest.getPetId())
+                    .orElseThrow(() -> {
+                        log.error("Pet not found: id={}", appointmentAdminRequest.getPetId());
+                        return new ResourceNotFoundException("Pet not found with id: " +
+                                appointmentAdminRequest.getPetId());
+                    });
 
-        appointmentRepository.saveAndFlush(appointment);
+            Doctor doctor = doctorRepository.findById(appointmentAdminRequest.getDoctorId())
+                    .orElseThrow(() -> {
+                        log.error("Doctor not found: id={}", appointmentAdminRequest.getDoctorId());
+                        return new ResourceNotFoundException("Doctor not found with id: " +
+                                appointmentAdminRequest.getDoctorId());
+                    });
 
+            Appointment appointment = AppointmentMapper.fromAdminRequest(
+                    appointmentAdminRequest, owner, pet, doctor);
+
+            appointmentRepository.saveAndFlush(appointment);
+            log.info("END createAppointmentAdmin: created appointment id={}", appointment.getId());
+
+        } catch (ResourceNotFoundException ex) {
+            log.warn("Entity not found in createAppointmentAdmin: {}", ex.getMessage());
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Unexpected error in createAppointmentAdmin", ex);
+            throw new ServiceException("Unexpected error while creating appointment by admin", ex);
+        }
     }
 
+    /**
+     * Отмена записи на прием
+     *
+     * @param appointmentId уникальный идентификатор приема
+     */
     @Override
     public void cancelAppointment(Long appointmentId) {
-        log.info("Start canceling appointment with id {}", appointmentId);
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
+        log.info("START cancelAppointment: id={}", appointmentId);
+        try {
+            Appointment appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> {
+                        log.warn("Appointment not found: id={}", appointmentId);
+                        return new ResourceNotFoundException("Appointment not found with id: " + appointmentId);
+                    });
 
-        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
-            log.warn("Attempt to cancel an already canceled appointment with id {}", appointmentId);
-            throw new IllegalStateException("Appointment is already canceled");
+            if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+                log.warn("Attempt to cancel already cancelled appointment: id={}", appointmentId);
+                throw new IllegalStateException("Appointment is already canceled");
+            }
+
+            appointment.setStatus(AppointmentStatus.CANCELLED);
+            appointmentRepository.saveAndFlush(appointment);
+            log.info("END cancelAppointment: cancelled id={}", appointmentId);
+
+        } catch (ResourceNotFoundException | IllegalStateException ex) {
+            log.warn("Error in cancelAppointment: {}", ex.getMessage());
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Unexpected error in cancelAppointment: id={}", appointmentId, ex);
+            throw new ServiceException("Unexpected error while canceling appointment", ex);
         }
-
-        appointment.setStatus(AppointmentStatus.CANCELLED);
-        appointmentRepository.save(appointment);
-
-        log.info("Appointment with id {} has been canceled by owner ", appointmentId);
     }
 
-
+    /**
+     * Получение приема по идентификатору
+     *
+     * @param id уникальный идентификатор приема
+     * @return Возращает полученный прием
+     */
     @Override
     public AppointmentResponse getAppointmentById(Long id) {
-        return AppointmentMapper.toResponse(appointmentRepository.findById(id).orElseThrow());
+        log.info("START getAppointmentById: id={}", id);
+        try {
+            Appointment appointment = appointmentRepository.findById(id)
+                    .orElseThrow(() -> {
+                        log.warn("Appointment not found: id={}", id);
+                        return new ResourceNotFoundException("Appointment not found with id: " + id);
+                    });
+
+            AppointmentResponse resp = AppointmentMapper.toResponse(appointment);
+            log.info("END getAppointmentById: id={}", id);
+            return resp;
+
+        } catch (ResourceNotFoundException ex) {
+            log.warn("Error in getAppointmentById: {}", ex.getMessage());
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Unexpected error in getAppointmentById: id={}", id, ex);
+            throw new ServiceException("Unexpected error while retrieving appointment", ex);
+        }
     }
 
+    /**
+     * Получение всех приёмов текущего владельца
+     *
+     * @return Возвразает полученный список приемов
+     */
     @Override
     public List<AppointmentResponseOwner> getAllOwnerAppointments() {
-
-        String ownerEmail = authUtil.getPrincipalEmail();
-
-        Client owner = clientRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Owner not found with email: " + ownerEmail));
-
-        List<Appointment> appointments = appointmentRepository.findAllByClientEmail(owner.getEmail());
-        return appointments
-                .stream()
-                .map(AppointmentMapper::toResponseOwner)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<AppointmentResponseOwner> getAllOwnerAppointmentsByStatus(AppointmentStatus status) {
-
-        String ownerEmail = authUtil.getPrincipalEmail();
-
-        Client owner = clientRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Owner not found with email: " + ownerEmail));
-
-        List<Appointment> appointments = appointmentRepository.findAllByClientEmailAndStatusOrderByAppointmentDateDescAppointmentStartTimeDesc(owner.getEmail(), status);
-        return appointments
-                .stream()
-                .map(AppointmentMapper::toResponseOwner)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<AppointmentResponseOwner> getAllAppointmentsByOwnerId(Long ownerId) {
-        if (ownerId == null || ownerId <= 0) {
-            throw new IllegalArgumentException("Invalid ownerId: " + ownerId);
-        }
-        Client client = clientRepository.findById(ownerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + ownerId));
-
+        log.info("START getAllOwnerAppointments");
         try {
-            List<Appointment> appointments = appointmentRepository.findAllByClientIdOrderByAppointmentDateDesc(client.getId());
-            return appointments
-                    .stream()
+            String ownerEmail = authUtil.getPrincipalEmail();
+            Client owner = clientRepository.findByEmail(ownerEmail)
+                    .orElseThrow(() -> {
+                        log.warn("Owner not found: email={}", ownerEmail);
+                        return new ResourceNotFoundException("Owner not found with email: " + ownerEmail);
+                    });
+
+            List<AppointmentResponseOwner> result = appointmentRepository
+                    .findAllByClientEmail(owner.getEmail()).stream()
                     .map(AppointmentMapper::toResponseOwner)
                     .collect(Collectors.toList());
-        } catch (DataAccessException e) {
-            throw new ServiceException("Error accessing data", e);
+
+            log.info("END getAllOwnerAppointments: found {} for user={}", result.size(), ownerEmail);
+            return result;
+
+        } catch (ResourceNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Unexpected error in getAllOwnerAppointments", ex);
+            throw new ServiceException("Unexpected error while fetching owner's appointments", ex);
         }
     }
 
+    /**
+     * Получение всех приемов текущего владельца по статусу
+     *
+     * @param status статус приема
+     * @return Возращает полученный список приемов
+     */
+    @Override
+    public List<AppointmentResponseOwner> getAllOwnerAppointmentsByStatus(AppointmentStatus status) {
+        log.info("START getAllOwnerAppointmentsByStatus: status={}", status);
+        try {
+            String ownerEmail = authUtil.getPrincipalEmail();
+            Client owner = clientRepository.findByEmail(ownerEmail)
+                    .orElseThrow(() -> {
+                        log.warn("Owner not found: email={}", ownerEmail);
+                        return new ResourceNotFoundException("Owner not found with email: " + ownerEmail);
+                    });
+
+            List<AppointmentResponseOwner> result = appointmentRepository
+                    .findAllByClientEmailAndStatusOrderByAppointmentDateDescAppointmentStartTimeDesc(
+                            owner.getEmail(), status
+                    ).stream()
+                    .map(AppointmentMapper::toResponseOwner)
+                    .collect(Collectors.toList());
+
+            log.info("END getAllOwnerAppointmentsByStatus: found {} for user={}, status={}",
+                    result.size(), ownerEmail, status);
+            return result;
+
+        } catch (ResourceNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Unexpected error in getAllOwnerAppointmentsByStatus", ex);
+            throw new ServiceException("Unexpected error while fetching owner's appointments by status", ex);
+        }
+    }
+
+    /**
+     * Получение приемов для опредленного пользователя
+     *
+     * @param ownerId идентификатор владельца
+     * @return Возращает полученный список приемов
+     */
+    @Override
+    public List<AppointmentResponseOwner> getAllAppointmentsByOwnerId(Long ownerId) {
+        log.info("START getAllAppointmentsByOwnerId: ownerId={}", ownerId);
+        if (ownerId == null || ownerId <= 0) {
+            log.warn("Invalid ownerId: {}", ownerId);
+            throw new IllegalArgumentException("Invalid ownerId: " + ownerId);
+        }
+        try {
+            Client client = clientRepository.findById(ownerId)
+                    .orElseThrow(() -> {
+                        log.warn("Client not found: id={}", ownerId);
+                        return new ResourceNotFoundException("Client not found with id: " + ownerId);
+                    });
+
+            List<AppointmentResponseOwner> result = appointmentRepository
+                    .findAllByClientIdOrderByAppointmentDateDesc(client.getId()).stream()
+                    .map(AppointmentMapper::toResponseOwner)
+                    .collect(Collectors.toList());
+
+            log.info("END getAllAppointmentsByOwnerId: found {} for ownerId={}", result.size(), ownerId);
+            return result;
+
+        } catch (ResourceNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Unexpected error in getAllAppointmentsByOwnerId", ex);
+            throw new ServiceException("Unexpected error while fetching appointments by ownerId", ex);
+        }
+    }
+
+    /**
+     * Получение приемов для определенного питомца
+     *
+     * @param petId уникальный идентификатор питомца
+     * @return Возвращает список приемов определенного питомца
+     */
     @Override
     public List<AppointmentResponseOwner> getAllOwnerAppointmentsByPetId(Long petId) {
-        Pet pet = petRepository.findById(petId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
+        log.info("START getAllOwnerAppointmentsByPetId: petId={}", petId);
+        try {
+            Pet pet = petRepository.findById(petId)
+                    .orElseThrow(() -> {
+                        log.warn("Pet not found: id={}", petId);
+                        return new ResourceNotFoundException("Pet not found with id: " + petId);
+                    });
 
-        List<Appointment> appointments = appointmentRepository.findAllByPetIdOrderByAppointmentDateDesc(pet.getId());
-        return appointments
-                .stream()
-                .map(AppointmentMapper::toResponseOwner)
-                .collect(Collectors.toList());
+            List<AppointmentResponseOwner> result = appointmentRepository
+                    .findAllByPetIdOrderByAppointmentDateDesc(pet.getId()).stream()
+                    .map(AppointmentMapper::toResponseOwner)
+                    .collect(Collectors.toList());
+
+            log.info("END getAllOwnerAppointmentsByPetId: found {} for petId={}", result.size(), petId);
+            return result;
+
+        } catch (ResourceNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Unexpected error in getAllOwnerAppointmentsByPetId", ex);
+            throw new ServiceException("Unexpected error while fetching appointments by petId", ex);
+        }
     }
 
+    /**
+     * Получение всех приемов
+     *
+     * @return Возращает список приемов
+     */
     @Override
     public List<AppointmentResponse> getAllAppointments() {
-        List<Appointment> appointments = appointmentRepository.findAll();
-        return appointments
-                .stream()
-                .map(AppointmentMapper::toResponse)
-                .collect(Collectors.toList());
+        log.info("START getAllAppointments");
+        try {
+            List<AppointmentResponse> result = appointmentRepository.findAll().stream()
+                    .map(AppointmentMapper::toResponse)
+                    .collect(Collectors.toList());
+            log.info("END getAllAppointments: total={}", result.size());
+            return result;
+        } catch (Exception ex) {
+            log.error("Unexpected error in getAllAppointments", ex);
+            throw new ServiceException("Unexpected error while fetching all appointments", ex);
+        }
     }
 
+    /**
+     * Расчет доступных временных слотов для записи на прием
+     *
+     * @param doctorId уникальный идентификатор врача
+     * @param date дата приема
+     * @param appointmentType тип приема для расчета длительности
+     * @return Возвращает список доступных слотов
+     */
+    @Override
     public List<LocalTime> getAvailableTimeSlots(Long doctorId, LocalDate date, AppointmentType appointmentType) {
         log.info("Calculating available time slots for doctorId={}, date={}", doctorId, date);
-        Duration slotDuration = appointmentType.getDuration();
+        try {
+            Duration slotDuration = appointmentType.getDuration();
 
-        Schedule schedule = scheduleRepository.findByDoctorIdAndDate(doctorId, date)
-                .orElseThrow(() -> {
-                    log.warn("Schedule not found for doctorId={} on date={}", doctorId, date);
-                    return new ResourceNotFoundException("Schedule not found");
+            Schedule schedule = scheduleRepository.findByDoctorIdAndDate(doctorId, date)
+                    .orElseThrow(() -> {
+                        log.warn("Schedule not found for doctorId={} on date={}", doctorId, date);
+                        return new ResourceNotFoundException("Schedule not found");
+                    });
+            LocalTime scheduleStart = schedule.getStartTime();
+            LocalTime scheduleEnd = schedule.getEndTime();
+
+            List<Appointment> bookedAppointments = appointmentRepository.findByDoctorIdAndAppointmentDate(doctorId, date);
+            log.info("Found {} booked appointments for doctorId={} on date={}", bookedAppointments.size(), doctorId, date);
+
+            List<LocalTime> availableSlots = new ArrayList<>();
+            LocalTime now = LocalTime.now();
+            boolean isToday = date.equals(LocalDate.now());
+
+            for (LocalTime slot = scheduleStart; !slot.plus(slotDuration).isAfter(scheduleEnd); slot = slot.plusMinutes(15)) {
+                if (isToday && slot.isBefore(now)) {
+                    continue;
+                }
+                final LocalTime currentSlot = slot;
+                boolean conflict = bookedAppointments.stream().anyMatch(appointment -> {
+                    LocalTime apptStart = appointment.getAppointmentStartTime();
+                    LocalTime apptEnd = appointment.getAppointmentEndTime();
+                    LocalTime candidateEnd = currentSlot.plus(slotDuration);
+                    return currentSlot.isBefore(apptEnd) && apptStart.isBefore(candidateEnd);
                 });
-        LocalTime scheduleStart = schedule.getStartTime();
-        LocalTime scheduleEnd = schedule.getEndTime();
-
-        List<Appointment> bookedAppointments = appointmentRepository.findByDoctorIdAndAppointmentDate(doctorId, date);
-        log.info("Found {} booked appointments for doctorId={} on date={}", bookedAppointments.size(), doctorId, date);
-
-        List<LocalTime> availableSlots = new ArrayList<>();
-        LocalTime now = LocalTime.now();
-        boolean isToday = date.equals(LocalDate.now());
-
-        for (LocalTime slot = scheduleStart; !slot.plus(slotDuration).isAfter(scheduleEnd); slot = slot.plusMinutes(15)) {
-            if (isToday && slot.isBefore(now)) {
-                continue;
+                if (!conflict) {
+                    availableSlots.add(currentSlot);
+                }
             }
-            final LocalTime currentSlot = slot;
-            boolean conflict = bookedAppointments.stream().anyMatch(appointment -> {
-                LocalTime apptStart = appointment.getAppointmentStartTime();
-                LocalTime apptEnd = appointment.getAppointmentEndTime();
-                LocalTime candidateEnd = currentSlot.plus(slotDuration);
-                return currentSlot.isBefore(apptEnd) && apptStart.isBefore(candidateEnd);
-            });
-            if (!conflict) {
-                availableSlots.add(currentSlot);
-            }
+            log.info("Found {} available time slots for doctorId={} on date={}", availableSlots.size(), doctorId, date);
+
+            return availableSlots;
+
+        } catch (ResourceNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Unexpected error in getAvailableTimeSlots", ex);
+            throw new ServiceException("Unexpected error while calculating available time slots", ex);
         }
-        log.info("Found {} available time slots for doctorId={} on date={}", availableSlots.size(), doctorId, date);
-        return availableSlots;
     }
 
-    @Scheduled(fixedDelay = 60000)
+    /**
+     * Регулярная задача: отмечает статус NO_SHOW для прошедших не проведенных приемов
+     */
+    @Scheduled(fixedDelay = 60_000)
     @Override
     public void updateNoShowAppointments() {
-        log.info("Running scheduled task to update no-show appointments");
-        LocalTime threshold = LocalTime.now().minusHours(2);
-        List<Appointment> appointments = appointmentRepository.findByStatusAndAppointmentEndTimeBefore(AppointmentStatus.SCHEDULED, threshold);
-        if (!appointments.isEmpty()) {
-            log.info("Updating status to NO_SHOW for {} appointments", appointments.size());
-            appointments.forEach(appointment -> appointment.setStatus(AppointmentStatus.NO_SHOW));
-            appointmentRepository.saveAll(appointments);
-        } else {
-            log.info("No scheduled appointments to update.");
+        log.info("START updateNoShowAppointments");
+        try {
+            LocalTime threshold = LocalTime.now().minusHours(2);
+            List<Appointment> toUpdate = appointmentRepository
+                    .findByStatusAndAppointmentEndTimeBefore(
+                            AppointmentStatus.SCHEDULED,
+                            threshold
+                    );
+            if (!toUpdate.isEmpty()) {
+                log.info("Updating {} appointments to NO_SHOW", toUpdate.size());
+                toUpdate.forEach(a -> a.setStatus(AppointmentStatus.NO_SHOW));
+                appointmentRepository.saveAll(toUpdate);
+            } else {
+                log.info("No appointments to mark as NO_SHOW");
+            }
+            log.info("END updateNoShowAppointments");
+        } catch (Exception ex) {
+            log.error("Unexpected error in updateNoShowAppointments", ex);
+            throw new ServiceException("Unexpected error in scheduled no-show update", ex);
         }
     }
 }

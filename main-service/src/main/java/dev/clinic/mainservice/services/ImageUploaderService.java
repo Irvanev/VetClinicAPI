@@ -57,10 +57,8 @@ public class ImageUploaderService {
 
             byte[] imageData = os.toByteArray();
 
-            // Генерация уникального имени файла
             String objectName = "client_" + UUID.randomUUID() + ".jpg";
 
-            // Загрузка в Minio
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)

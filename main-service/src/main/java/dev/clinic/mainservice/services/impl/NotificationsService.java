@@ -1,7 +1,6 @@
 package dev.clinic.mainservice.services.impl;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -12,7 +11,6 @@ public class NotificationsService {
 
     private final RabbitTemplate rabbitTemplate;
 
-    @Autowired
     public NotificationsService(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
     }

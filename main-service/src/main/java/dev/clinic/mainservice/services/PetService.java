@@ -15,5 +15,5 @@ public interface PetService {
     List<PetResponse> getAllPets();
     List<PetResponse> getAllPetsByPrincipalOwner();
     PetResponse editPet(Long id, PetRequest createPetDto);
-    boolean deletePet(Long id);
+    void deletePet(Long id);
 }

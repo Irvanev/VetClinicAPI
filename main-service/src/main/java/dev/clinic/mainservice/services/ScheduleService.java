@@ -4,7 +4,6 @@ import dev.clinic.mainservice.dtos.schedule.ScheduleRequest;
 import dev.clinic.mainservice.dtos.schedule.ScheduleResponse;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 
 public interface ScheduleService {
@@ -14,7 +13,7 @@ public interface ScheduleService {
     List<ScheduleResponse> getAllPrincipalSchedules();
     List<ScheduleResponse> getAllPrincipalSchedulesByDate(LocalDate date);
     ScheduleResponse createDoctorSchedule(ScheduleRequest request);
-    void editDoctorSchedule(Long id, ScheduleRequest request); // !TODO
+    void editDoctorSchedule(Long id, ScheduleRequest request);
     void deleteDoctorSchedule(Long id);
 
 }

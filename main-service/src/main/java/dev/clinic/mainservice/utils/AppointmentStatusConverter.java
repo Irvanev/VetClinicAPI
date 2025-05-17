@@ -1,4 +1,4 @@
-package dev.clinic.mainservice.configs;
+package dev.clinic.mainservice.utils;
 
 import dev.clinic.mainservice.models.enums.AppointmentStatus;
 import org.springframework.core.convert.converter.Converter;

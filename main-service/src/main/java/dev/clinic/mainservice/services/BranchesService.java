@@ -12,5 +12,5 @@ public interface BranchesService {
     BranchResponse createBranch(BranchRequest branchRequest);
     BranchResponse getBranchById(Long id);
     BranchResponse editBranch(Long id, BranchRequest branchRequest);
-    boolean deleteBranch(Long id);
+    void deleteBranch(Long id);
 }

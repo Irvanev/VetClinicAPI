@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +23,6 @@ public class BranchesController {
 
     private final BranchesService branchesService;
 
-    @Autowired
     public BranchesController(BranchesService branchesService) {
         this.branchesService = branchesService;
     }
@@ -44,7 +42,7 @@ public class BranchesController {
     }
 
     @Operation(
-            summary = "Создать новый филиал",
+            summary = "Создать новый филиал (для администартора)",
             description = "Создаёт новый филиал клиники",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Филиал успешно создан"),
@@ -83,8 +81,22 @@ public class BranchesController {
     )
     @GetMapping("/by-service/{service}")
     public ResponseEntity<List<BranchResponse>> getByService(
-            @Parameter(description = "Название услуги", required = true,
-                    schema = @Schema(type = "string", example = "CONSULTATION"))
+            @Parameter(
+                    description = "Название услуги",
+                    required = true,
+                    schema = @Schema(
+                            type = "string",
+                            allowableValues = {
+                                    "Консультация",
+                                    "Рентген",
+                                    "Вакцинация",
+                                    "Операция",
+                                    "Осмотр",
+                                    "Чипирование"
+                            },
+                            example = "Консультация"
+                    )
+            )
             @PathVariable("service") AppointmentType service
     ) {
         List<BranchResponse> list = branchesService.getAllBranchesByServiceName(service);
@@ -92,7 +104,7 @@ public class BranchesController {
     }
 
     @Operation(
-            summary = "Редактировать филиал",
+            summary = "Редактировать филиал (для администартора)",
             description = "Обновляет информацию о филиале по его ID",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Филиал успешно обновлён"),
@@ -112,7 +124,7 @@ public class BranchesController {
     }
 
     @Operation(
-            summary = "Удалить филиал",
+            summary = "Удалить филиал (для администартора)",
             description = "Удаляет филиал по его ID",
             responses = {
                     @ApiResponse(responseCode = "204", description = "Филиал успешно удалён"),

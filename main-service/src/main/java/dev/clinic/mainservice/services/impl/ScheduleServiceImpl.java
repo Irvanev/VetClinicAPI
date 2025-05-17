@@ -10,15 +10,16 @@ import dev.clinic.mainservice.repositories.DoctorRepository;
 import dev.clinic.mainservice.repositories.ScheduleRepository;
 import dev.clinic.mainservice.services.ScheduleService;
 import dev.clinic.mainservice.utils.AuthUtil;
+import org.hibernate.service.spi.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
-import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.DataAccessException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -30,9 +31,9 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final DoctorRepository doctorRepository;
     private final AuthUtil authUtil;
+
     private static final Logger log = LoggerFactory.getLogger(ScheduleServiceImpl.class);
 
-    @Autowired
     public ScheduleServiceImpl(
             ScheduleRepository scheduleRepository,
             DoctorRepository doctorRepository,
@@ -43,115 +44,249 @@ public class ScheduleServiceImpl implements ScheduleService {
         this.authUtil = authUtil;
     }
 
+    /**
+     * Получение расписаний всех врачей
+     * @return возвращает список расписаний
+     */
     @Override
-    @Transactional(readOnly = true)
+    @Cacheable(value = "schedules", key = "'all'")
     public List<ScheduleResponse> getAllSchedules() {
-        log.info("Fetching all schedules");
-        List<Schedule> schedules = scheduleRepository.findAll();
-        log.debug("Found {} schedules", schedules.size());
-        return schedules.stream()
-                .map(ScheduleMapper::toResponse)
-                .collect(Collectors.toList());
+        log.info("Fetching all schedules was called");
+        try {
+            List<Schedule> schedules = scheduleRepository.findAll();
+            log.debug("Found {} schedules", schedules.size());
+            return schedules.stream()
+                    .map(ScheduleMapper::toResponse)
+                    .collect(Collectors.toList());
+        } catch (DataAccessException ex) {
+            log.error("Database error in getAllSchedules", ex);
+            throw new ServiceException("Database error while fetching all schedules", ex);
+        } catch (Exception ex) {
+            log.error("Unexpected error in getAllSchedules", ex);
+            throw new ServiceException("Unexpected error while fetching all schedules", ex);
+        }
     }
 
+    /**
+     * Получения расписания определнного врача
+     * @param doctorId уникальный идентификатор врача
+     * @return возвращает полученное расписание врача
+     */
     @Override
-    @Transactional(readOnly = true)
+    @Cacheable(value = "schedules", key = "#doctorId")
     public List<ScheduleResponse> getAllSchedulesByDoctorId(Long doctorId) {
-        log.info("Fetching schedules for doctor id={}", doctorId);
-        if (doctorId == null || doctorId <= 0) {
-            log.warn("Invalid doctorId passed: {}", doctorId);
-            throw new IllegalArgumentException("Doctor id must be provided and greater than zero");
-        }
+        log.info("Fetching schedules for doctor id={} was called", doctorId);
+        try {
+            if (doctorId == null || doctorId <= 0) {
+                log.warn("Invalid doctorId passed: {}", doctorId);
+                throw new IllegalArgumentException("Doctor id must be provided and greater than zero");
+            }
 
-        List<Schedule> schedules = scheduleRepository.findAllByDoctorId(doctorId);
-        log.debug("Doctor id={} has {} schedules", doctorId, schedules.size());
-        return schedules.stream()
-                .map(ScheduleMapper::toResponse)
-                .collect(Collectors.toList());
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = authUtil.getPrincipalEmail();
+            log.debug("User is authenticated with email: {}", userEmail);
+
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("Admin"));
+
+            if (!isAdmin) {
+                Doctor me = doctorRepository.findByEmail(userEmail)
+                        .orElseThrow(() -> {
+                            log.warn("Doctor entity not found for user {}", userEmail);
+                            return new ResourceNotFoundException("Doctor profile not found");
+                        });
+                if (!me.getId().equals(doctorId)) {
+                    log.warn("Access denied: user {} trying to access schedules of doctor {}", userEmail, doctorId);
+                    throw new AccessDeniedException("Access denied");
+                }
+            }
+
+            List<Schedule> schedules = scheduleRepository.findAllByDoctorId(doctorId);
+            log.debug("Doctor id={} has {} schedules", doctorId, schedules.size());
+
+            return schedules.stream()
+                    .map(ScheduleMapper::toResponse)
+                    .collect(Collectors.toList());
+
+        } catch (DataAccessException ex) {
+            log.error("Database error in getAllSchedulesByDoctorId", ex);
+            throw new ServiceException("Database error while fetching all schedules by doctor id", ex);
+        } catch (Exception ex) {
+            log.error("Unexpected error in getAllSchedulesByDoctorId", ex);
+            throw new ServiceException("Unexpected error while fetching all schedules bu doctor id", ex);
+        }
     }
 
+    /**
+     * Получения списка расписания определлного врача в определленную дату
+     * @param doctorId уникальный идентификатор врача
+     * @param date дата рабочего графика врача
+     * @return возвращает полученное расписание врача
+     */
     @Override
-    @Transactional(readOnly = true)
+    @Cacheable("schedules")
     public List<ScheduleResponse> getAllSchedulesByDoctorIdAndDate(Long doctorId, LocalDate date) {
-        log.info("Fetching schedules for doctor id={} on date={}", doctorId, date);
-        if (doctorId == null || doctorId <= 0) {
-            log.warn("Invalid doctorId passed: {}", doctorId);
-            throw new IllegalArgumentException("Doctor id must be provided and greater than zero");
+        log.info("Fetching schedules for doctor id={} on date={} was called", doctorId, date);
+        try {
+            if (doctorId == null || doctorId <= 0) {
+                log.warn("Invalid doctorId passed: {}", doctorId);
+                throw new IllegalArgumentException("Doctor id must be provided and greater than zero");
+            }
+            List<Schedule> schedules = scheduleRepository.findAllByDoctorIdAndDate(doctorId, date);
+            log.debug("Doctor id={} on {} has {} schedules", doctorId, date, schedules.size());
+
+            return schedules.stream()
+                    .map(ScheduleMapper::toResponse)
+                    .collect(Collectors.toList());
+
+        } catch (ResourceNotFoundException | AccessDeniedException ex) {
+            log.error("Error in getAllSchedulesByDoctorIdAndDate: {}", ex.getMessage());
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Unexpected error in getAllSchedulesByDoctorIdAndDate for id = {}", doctorId, ex);
+            throw new ServiceException("Unexpected error while retrieving schedule", ex);
         }
-        List<Schedule> schedules = scheduleRepository.findAllByDoctorIdAndDate(doctorId, date);
-        log.debug("Doctor id={} on {} has {} schedules", doctorId, date, schedules.size());
-        return schedules.stream()
-                .map(ScheduleMapper::toResponse)
-                .collect(Collectors.toList());
     }
 
+    /**
+     * Получения расписания для авторизированного врача
+     * @return возвращает полученное расписание врача
+     */
     @Override
-    @Transactional(readOnly = true)
+    @Cacheable("schedules")
     public List<ScheduleResponse> getAllPrincipalSchedules() {
-        String userEmail = authUtil.getPrincipalEmail();
-        log.info("Fetching schedules for currently authenticated doctor '{}'", userEmail);
-        List<Schedule> schedules = scheduleRepository.findAllByDoctorEmail(userEmail);
-        log.info("Fetching schedules for currently authenticated doctor '{}'", userEmail);
-        return schedules.stream()
-                .map(ScheduleMapper::toResponse)
-                .collect(Collectors.toList());
+        log.info("Get all principal schedules was called");
+        try {
+            String userEmail = authUtil.getPrincipalEmail();
+            log.info("Fetching schedules for currently authenticated doctor '{}'", userEmail);
+            List<Schedule> schedules = scheduleRepository.findAllByDoctorEmail(userEmail);
+
+            return schedules.stream()
+                    .map(ScheduleMapper::toResponse)
+                    .collect(Collectors.toList());
+
+        } catch (Exception ex) {
+            log.error("Unexpected error in getAllPrincipalSchedules", ex);
+            throw new ServiceException("Unexpected error while fetching schedule", ex);
+        }
     }
 
+    /**
+     * Получения расписания для авторизированного врача в определенную дату
+     * @param date дата рабочего графика врача
+     * @return возвращает полученное расписание врача
+     */
     @Override
-    @Transactional(readOnly = true)
+    @Cacheable("schedules")
     public List<ScheduleResponse> getAllPrincipalSchedulesByDate(LocalDate date) {
-        String userEmail = authUtil.getPrincipalEmail();
-        log.info("Fetching schedules for doctor '{}' on date={}", userEmail, date);
-        List<Schedule> schedules = scheduleRepository.findAllByDoctorEmailAndDate(userEmail, date);
-        log.debug("Doctor '{}' on {} has {} schedules", userEmail, date, schedules.size());
-        return schedules.stream()
-                .map(ScheduleMapper::toResponse)
-                .collect(Collectors.toList());
+        log.info("Get all principal schedules by date was called");
+        try {
+            String userEmail = authUtil.getPrincipalEmail();
+            log.debug("User is authenticated with email: {}", userEmail);
+
+            log.info("Fetching schedules for doctor '{}' on date={}", userEmail, date);
+            List<Schedule> schedules = scheduleRepository.findAllByDoctorEmailAndDate(userEmail, date);
+            log.debug("Doctor '{}' on {} has {} schedules", userEmail, date, schedules.size());
+
+            return schedules.stream()
+                    .map(ScheduleMapper::toResponse)
+                    .collect(Collectors.toList());
+
+        } catch (Exception ex) {
+            log.error("Unexpected error in getAllPrincipalSchedulesByDate", ex);
+            throw new ServiceException("Unexpected error while fetching schedule", ex);
+        }
     }
 
+    /**
+     * Создание раписания врача
+     * @param request объект для создания расписания
+     * @return возвращает полученное расписание врача
+     */
     @Override
-    @Transactional
+    @CacheEvict(value = "schedules", allEntries = true)
     public ScheduleResponse createDoctorSchedule(ScheduleRequest request) {
         log.info("Creating schedule for doctorId={} on date={} at {}",
                 request.getDoctorId(), request.getDate(), request.getStartTime());
-        Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() -> {
-                    log.error("Doctor not found with id={}", request.getDoctorId());
-                    return new ResourceNotFoundException("Doctor with id " + request.getDoctorId() + " not found");
-                });
+        try {
+            Doctor doctor = doctorRepository.findById(request.getDoctorId())
+                    .orElseThrow(() -> {
+                        log.error("Doctor not found with id={}", request.getDoctorId());
+                        return new ResourceNotFoundException("Doctor with id " + request.getDoctorId() + " not found");
+                    });
 
-        Schedule schedule = ScheduleMapper.fromRequest(request, doctor);
+            Schedule schedule = ScheduleMapper.fromRequest(request, doctor);
 
-        Schedule saved = scheduleRepository.save(schedule);
-        log.info("Created schedule id={} for doctorId={}", saved.getId(), request.getDoctorId());
+            Schedule saved = scheduleRepository.save(schedule);
+            log.info("Created schedule id={} for doctorId={}", saved.getId(), request.getDoctorId());
 
-        return ScheduleMapper.toResponse(schedule);
+            return ScheduleMapper.toResponse(schedule);
+
+        } catch (ResourceNotFoundException | IllegalArgumentException ex) {
+            log.error("Validation error in createDoctorSchedule: {}", ex.getMessage());
+            throw ex;
+        } catch (DataAccessException ex) {
+            log.error("Database error in createDoctorSchedule", ex);
+            throw new ServiceException("Database error while creating schedule", ex);
+        } catch (Exception ex) {
+            log.error("Unexpected error in createDoctorSchedule", ex);
+            throw new ServiceException("Unexpected error while creating schedule", ex);
+        }
     }
 
+    /**
+     * Редактирование расписания врача
+     * @param id уникальный идентфикатор раписания
+     * @param request объект для реадактирования расписания
+     */
     @Override
-    @Transactional
+    @CacheEvict(value = "schedules", allEntries = true)
     public void editDoctorSchedule(Long id, ScheduleRequest request) {
         log.info("Editing schedule id={}", id);
-        if (id == null || id <= 0) {
-            log.warn("Invalid schedule id passed for edit: {}", id);
-            throw new IllegalArgumentException("Schedule id must be provided");
+        try {
+            if (id == null || id <= 0) {
+                log.warn("Invalid schedule id passed for edit: {}", id);
+                throw new IllegalArgumentException("Schedule id must be provided");
+            }
+        } catch (ResourceNotFoundException | AccessDeniedException | IllegalArgumentException ex) {
+            log.error("Error in editDoctorSchedule: {}", ex.getMessage());
+            throw ex;
+        } catch (DataAccessException ex) {
+            log.error("Database error in editDoctorSchedule for id = {}", id, ex);
+            throw new ServiceException("Database error while editing schedule", ex);
+        } catch (Exception ex) {
+            log.error("Unexpected error in editDoctorSchedule for id = {}", id, ex);
+            throw new ServiceException("Unexpected error while editing schedule", ex);
         }
     }
 
+    /**
+     * Удлаения расписания врача
+     * @param id уникальный идентификатор расписания
+     */
     @Override
-    @Transactional
+    @CacheEvict(value = "schedules", allEntries = true)
     public void deleteDoctorSchedule(Long id) {
         log.info("Deleting schedule id={}", id);
-        if (id == null || id <= 0) {
-            log.warn("Invalid schedule id passed for delete: {}", id);
-            throw new IllegalArgumentException("Schedule id must be provided and greater than zero");
-        }
         try {
+            if (id == null || id <= 0) {
+                log.warn("Invalid schedule id passed for delete: {}", id);
+                throw new IllegalArgumentException("Schedule id must be provided and greater than zero");
+            }
+
             scheduleRepository.deleteById(id);
+
             log.info("Successfully deleted schedule id={}", id);
-        } catch (EmptyResultDataAccessException ex) {
-            log.error("Failed to delete schedule id={}, not found", id);
-            throw new ResourceNotFoundException("Schedule not found with id: " + id);
+
+        } catch (ResourceNotFoundException | AccessDeniedException ex) {
+            log.error("Error in deleteDoctorSchedule: {}", ex.getMessage());
+            throw ex;
+        } catch (DataAccessException ex) {
+            log.error("Database error in deleteDoctorSchedule for id = {}", id, ex);
+            throw new ServiceException("Database error while deleting schedule", ex);
+        } catch (Exception ex) {
+            log.error("Unexpected error in deleteDoctorSchedule for id = {}", id, ex);
+            throw new ServiceException("Unexpected error while deleting schedule", ex);
         }
     }
 }

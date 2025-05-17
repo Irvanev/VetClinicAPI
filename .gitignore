@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 .env
 .gradle
+**/src/main/resources/firebase-service-account.json
 /tools/docker/message-broker/rabbitmq_data/**
 /tools/docker/message-broker/rabbitmq_definitions.json
 gradle

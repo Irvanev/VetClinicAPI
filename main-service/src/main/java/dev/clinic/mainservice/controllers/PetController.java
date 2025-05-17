@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +24,6 @@ public class PetController {
 
     private final PetService petService;
 
-    @Autowired
     public PetController(PetService petService) {
         this.petService = petService;
     }
@@ -105,7 +103,7 @@ public class PetController {
                     @ApiResponse(responseCode = "200", description = "Список получен")
             }
     )
-    @GetMapping
+    @GetMapping("/admin")
     public ResponseEntity<List<PetResponse>> getAllPets() {
         List<PetResponse> responses = petService.getAllPets();
         return new ResponseEntity<>(responses, HttpStatus.OK);

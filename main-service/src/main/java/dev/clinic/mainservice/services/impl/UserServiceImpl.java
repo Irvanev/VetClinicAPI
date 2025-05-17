@@ -13,15 +13,12 @@ import dev.clinic.mainservice.services.UserService;
 import dev.clinic.mainservice.utils.AuthUtil;
 import org.hibernate.service.spi.ServiceException;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,7 +43,6 @@ public class UserServiceImpl implements UserService {
     private final ImageUploaderService imageUploaderService;
     private final AuthUtil authUtil;
 
-    @Autowired
     public UserServiceImpl(
             UserRepository userRepository,
             RoleRepository roleRepository,
@@ -72,6 +68,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users", key = "'all'")
     public Page<UserResponse> getAllUsers(Pageable pageable) {
         Page<User> usersPage = userRepository.findAll(pageable);
         List<UserResponse> userResponses = usersPage.getContent().stream()
@@ -110,6 +107,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CacheEvict(value = "users", allEntries = true)
     public void changePassword(ChangePasswordRequest request) {
         String userEmail = authUtil.getPrincipalEmail();
 
@@ -130,6 +128,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CacheEvict(value = "users", allEntries = true)
     public DoctorResponse createDoctor(DoctorRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("User already exists");
@@ -159,12 +158,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users", key = "#branchId")
     public List<DoctorResponseForSelectInAppointment> getAllDoctorsByBranchId(Long branchId) {
         return doctorRepository.findAllByBranchId(branchId).stream()
                 .map(user -> modelMapper.map(user, DoctorResponseForSelectInAppointment.class))
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(value = "users", allEntries = true)
+    @Override
     public UserResponse editClientByAdmin(EditClientRequest request, Long clientId, MultipartFile photo) {
         if (clientId == null || clientId <= 0) {
             throw new IllegalArgumentException("Invalid client ID");
@@ -201,6 +203,29 @@ public class UserServiceImpl implements UserService {
                 throw new ServiceException("Image processing failed", ex);
             }
         }
+
+        try {
+            Client updatedClient = clientRepository.save(client);
+            return modelMapper.map(updatedClient, UserResponse.class);
+        } catch (DataAccessException ex) {
+            throw new ServiceException("Error saving client data", ex);
+        }
+    }
+
+    @Override
+    public UserResponse editClient(EditClientRequest request, Long clientId) {
+        if (clientId == null || clientId <= 0) {
+            throw new IllegalArgumentException("Invalid client ID");
+        }
+
+        if (request == null) {
+            throw new IllegalArgumentException("Request cannot be null");
+        }
+
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
+
+        UserMapping.fromRequest(request);
 
         try {
             Client updatedClient = clientRepository.save(client);

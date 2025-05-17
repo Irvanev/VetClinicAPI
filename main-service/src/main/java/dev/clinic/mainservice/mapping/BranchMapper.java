@@ -1,18 +1,13 @@
 package dev.clinic.mainservice.mapping;
 
-import dev.clinic.mainservice.dtos.appointments.AppointmentResponseOwner;
 import dev.clinic.mainservice.dtos.branches.BranchRequest;
 import dev.clinic.mainservice.dtos.branches.BranchResponse;
-import dev.clinic.mainservice.models.entities.Appointment;
 import dev.clinic.mainservice.models.entities.Branches;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class BranchMapper {
 
@@ -62,13 +57,31 @@ public class BranchMapper {
         return branchResponse;
     }
 
-    public static List<BranchResponse> toResponseList(List<Branches> branches) {
-        if (branches == null) {
-            return Collections.emptyList();
+    public static void updateFromRequest(Branches branch, BranchRequest request) {
+        if (request.getAddress() != null) {
+            branch.setAddress(request.getAddress());
         }
-        return branches.stream()
-                .map(BranchMapper::toResponse)
-                .collect(Collectors.toList());
+        if (request.getPhone() != null) {
+            branch.setPhone(request.getPhone());
+        }
+        if (request.getEmail() != null) {
+            branch.setEmail(request.getEmail());
+        }
+        if (request.getName() != null) {
+            branch.setName(request.getName());
+        }
+        if (request.getShortName() != null) {
+            branch.setShortName(request.getShortName());
+        }
+        Point point = createPoint(
+                request.getLongitude(),
+                request.getLatitude()
+        );
+        branch.setCoordinates(point);
+
+        if (request.getServices() != null) {
+            branch.setServices(new HashSet<>(request.getServices()));
+        }
     }
 
     private static Point createPoint(Double longitude, Double latitude) {

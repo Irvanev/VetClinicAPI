@@ -20,4 +20,5 @@ public interface UserService {
     DoctorResponse createDoctor(DoctorRequest doctorRequest);
     List<DoctorResponseForSelectInAppointment> getAllDoctorsByBranchId(Long branchId);
     UserResponse editClientByAdmin(EditClientRequest editClientRequest, Long clientId, MultipartFile photo);
+    UserResponse editClient(EditClientRequest editClientRequest, Long clientId);
 }
