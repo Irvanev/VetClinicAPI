@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: notification-service
+
+  config:
+    import:
+      - optional:file:.env[.properties]
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      initialization-fail-timeout: -1
+      connection-timeout: 30000
+    url: jdbc:postgresql://localhost:5432/notifications
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        show_sql: true
+    hibernate:
+      ddl-auto: update
+
+  rabbitmq:
+    host: localhost
+    username: guest
+    password: guest
+    virtual-host: /
+
+
+firebase:
+  service-account-file: classpath:firebase-service-account.json
+server:
+  address: 0.0.0.0
+  port: 8082
