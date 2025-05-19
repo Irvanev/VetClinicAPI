@@ -14,6 +14,7 @@ public class PetMapper {
         Pet pet = new Pet();
         pet.setBirthDate(petRequest.getBirthDate());
         pet.setName(petRequest.getName());
+        pet.setAnimalType(petRequest.getAnimalType());
         pet.setBreed(petRequest.getBreed());
         pet.setOwner(owner);
 
