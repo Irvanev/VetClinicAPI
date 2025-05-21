@@ -57,11 +57,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
                         .requestMatchers("/actuator/prometheus").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**", "api/pets/admin/createPet", "api/schedule/**").permitAll()
-                        .requestMatchers("/api/users/**", "/api/pets/admin/**").hasRole("Admin")
-                        .requestMatchers(HttpMethod.POST, "/api/branches/**").hasRole("Admin")
-                        .requestMatchers(HttpMethod.DELETE, "/api/branches/**").hasRole("Admin")
-                        .requestMatchers(HttpMethod.PUT, "/api/branches/**").hasRole("Admin")
+                        .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs/**", "/api/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
