@@ -129,8 +129,8 @@ public class UserController {
     }
 
     @Operation(
-            summary = "Редактировать клиента",
-            description = "Обновление данных клиента с возможностью загрузки фото",
+            summary = "Редактировать клиента администратором",
+            description = "Обновление данных клиента от лица администратора",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Данные обновлены"),
                     @ApiResponse(responseCode = "400", description = "Ошибка валидации"),
@@ -138,8 +138,8 @@ public class UserController {
                     @ApiResponse(responseCode = "404", description = "Клиент не найден")
             }
     )
-    @PutMapping(value = "/clients/{clientId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UserResponse> updateClient(
+    @PutMapping(value = "/admin/clients/{clientId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserResponse> updateClientByAdmin(
             @Parameter(description = "ID клиента", required = true)
             @PathVariable Long clientId,
 
@@ -151,5 +151,42 @@ public class UserController {
             ) {
 
         return new ResponseEntity<>(userService.editClientByAdmin(request, clientId, photo), HttpStatus.OK);
+    }
+
+    @Operation(
+            summary = "Редактировать клиента",
+            description = "Обновление данных клиента с возможностью загрузки фото",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Данные обновлены"),
+                    @ApiResponse(responseCode = "400", description = "Ошибка валидации"),
+                    @ApiResponse(responseCode = "403", description = "Доступ запрещен"),
+                    @ApiResponse(responseCode = "404", description = "Клиент не найден")
+            }
+    )
+    @PutMapping(value = "/clients")
+    public ResponseEntity<UserProfileResponse> updateClient(
+            @Parameter(description = "Данные для обновления")
+            @Valid EditClientRequest request
+    ) {
+
+        return new ResponseEntity<>(userService.editClient(request), HttpStatus.OK);
+    }
+
+    @Operation(
+            summary = "Обновление фотографии пользователя",
+            description = "Обновление фотографии пользователя",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Данные обновлены"),
+                    @ApiResponse(responseCode = "400", description = "Ошибка валидации"),
+                    @ApiResponse(responseCode = "403", description = "Доступ запрещен"),
+                    @ApiResponse(responseCode = "404", description = "Клиент не найден")
+            }
+    )
+    @PutMapping(value = "/clients/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserProfileResponse> editPhoto(
+            @RequestPart("photo") MultipartFile photo
+    ) {
+
+        return new ResponseEntity<>(userService.editPhoto(photo), HttpStatus.OK);
     }
 }

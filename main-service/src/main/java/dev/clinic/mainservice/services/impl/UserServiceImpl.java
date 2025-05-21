@@ -4,6 +4,7 @@ import dev.clinic.mainservice.dtos.auth.ChangePasswordRequest;
 import dev.clinic.mainservice.dtos.users.*;
 import dev.clinic.mainservice.exceptions.ResourceNotFoundException;
 import dev.clinic.mainservice.mapping.DoctorMapping;
+import dev.clinic.mainservice.mapping.PetMapper;
 import dev.clinic.mainservice.mapping.UserMapping;
 import dev.clinic.mainservice.models.entities.*;
 import dev.clinic.mainservice.models.enums.RoleEnum;
@@ -161,7 +162,7 @@ public class UserServiceImpl implements UserService {
     @Cacheable(value = "users", key = "#branchId")
     public List<DoctorResponseForSelectInAppointment> getAllDoctorsByBranchId(Long branchId) {
         return doctorRepository.findAllByBranchId(branchId).stream()
-                .map(user -> modelMapper.map(user, DoctorResponseForSelectInAppointment.class))
+                .map(UserMapping::toDoctorByBranchId)
                 .collect(Collectors.toList());
     }
 
@@ -213,25 +214,62 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse editClient(EditClientRequest request, Long clientId) {
-        if (clientId == null || clientId <= 0) {
-            throw new IllegalArgumentException("Invalid client ID");
-        }
-
+    public UserProfileResponse editClient(EditClientRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("Request cannot be null");
         }
+        String clientEmail = authUtil.getPrincipalEmail();
 
-        Client client = clientRepository.findById(clientId)
+        Client client = clientRepository.findByEmail(clientEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
 
-        UserMapping.fromRequest(request);
+        UserMapping.updateFromRequest(client, request);
 
         try {
             Client updatedClient = clientRepository.save(client);
-            return modelMapper.map(updatedClient, UserResponse.class);
+            return UserMapping.toProfileResponse(updatedClient);
         } catch (DataAccessException ex) {
             throw new ServiceException("Error saving client data", ex);
+        }
+    }
+
+    @Override
+    public UserProfileResponse editPhoto(MultipartFile photo) {
+        try {
+            if (photo == null || photo.isEmpty()) {
+                throw new IllegalArgumentException("Photo must be provided");
+            }
+            String contentType = photo.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                throw new IllegalArgumentException("Invalid file type. Only images are allowed");
+            }
+            String userEmail = authUtil.getPrincipalEmail();
+
+            Client client = clientRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> {
+                        return new ResourceNotFoundException("Client not found with id: " + userEmail);
+                    });
+
+            String photoUrl;
+            try {
+                photoUrl = imageUploaderService.uploadImage(photo);
+            } catch (IOException ex) {
+                throw new ServiceException("Image upload failed", ex);
+            }
+
+            client.setPhotoUrl(photoUrl);
+            Client updated = clientRepository.save(client);
+
+            return UserMapping.toProfileResponse(updated);
+
+        } catch (ResourceNotFoundException | IllegalArgumentException ex) {
+            throw ex;
+        } catch (DataAccessException ex) {
+            throw new ServiceException("Database error while updating client photo", ex);
+        } catch (ServiceException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ServiceException("Unexpected error while updating client photo", ex);
         }
     }
 }
