@@ -17,8 +17,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -80,25 +78,6 @@ public class ScheduleServiceImpl implements ScheduleService {
             if (doctorId == null || doctorId <= 0) {
                 log.warn("Invalid doctorId passed: {}", doctorId);
                 throw new IllegalArgumentException("Doctor id must be provided and greater than zero");
-            }
-
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String userEmail = authUtil.getPrincipalEmail();
-            log.debug("User is authenticated with email: {}", userEmail);
-
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(auth -> auth.getAuthority().equals("Admin"));
-
-            if (!isAdmin) {
-                Doctor me = doctorRepository.findByEmail(userEmail)
-                        .orElseThrow(() -> {
-                            log.warn("Doctor entity not found for user {}", userEmail);
-                            return new ResourceNotFoundException("Doctor profile not found");
-                        });
-                if (!me.getId().equals(doctorId)) {
-                    log.warn("Access denied: user {} trying to access schedules of doctor {}", userEmail, doctorId);
-                    throw new AccessDeniedException("Access denied");
-                }
             }
 
             List<Schedule> schedules = scheduleRepository.findAllByDoctorId(doctorId);

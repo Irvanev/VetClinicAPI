@@ -458,18 +458,18 @@ public class AppointmentServiceImpl implements AppointmentService {
     public void updateNoShowAppointments() {
         log.info("START updateNoShowAppointments");
         try {
-            LocalTime threshold = LocalTime.now().minusHours(2);
+            LocalDate today = LocalDate.now();
+            LocalTime timeThreshold = LocalTime.now().minusHours(2);
             List<Appointment> toUpdate = appointmentRepository
-                    .findByStatusAndAppointmentEndTimeBefore(
+                    .findNoShowCandidates(
                             AppointmentStatus.SCHEDULED,
-                            threshold
+                            today,
+                            timeThreshold
                     );
+
             if (!toUpdate.isEmpty()) {
-                log.info("Updating {} appointments to NO_SHOW", toUpdate.size());
                 toUpdate.forEach(a -> a.setStatus(AppointmentStatus.NO_SHOW));
                 appointmentRepository.saveAll(toUpdate);
-            } else {
-                log.info("No appointments to mark as NO_SHOW");
             }
             log.info("END updateNoShowAppointments");
         } catch (Exception ex) {
