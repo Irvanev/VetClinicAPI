@@ -67,7 +67,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public void createAppointment(AppointmentRequest appointmentRequest) {
         String ownerEmail = authUtil.getPrincipalEmail();
-        log.info("START createAppointment: email={}, date={}, startTime={}",
+        log.info("Called createAppointment: email={}, date={}, startTime={}",
                 ownerEmail,
                 appointmentRequest.getAppointmentDate(),
                 appointmentRequest.getAppointmentStartTime());
@@ -135,7 +135,7 @@ public class AppointmentServiceImpl implements AppointmentService {
      */
     @Override
     public void createAppointmentAdmin(AppointmentAdminRequest appointmentAdminRequest) {
-        log.info("START createAppointmentAdmin: clientId={}, petId={}, doctorId={}",
+        log.info("Called createAppointmentAdmin: clientId={}, petId={}, doctorId={}",
                 appointmentAdminRequest.getClintId(),
                 appointmentAdminRequest.getPetId(),
                 appointmentAdminRequest.getDoctorId());
@@ -183,7 +183,7 @@ public class AppointmentServiceImpl implements AppointmentService {
      */
     @Override
     public void cancelAppointment(Long appointmentId) {
-        log.info("START cancelAppointment: id={}", appointmentId);
+        log.info("Called cancelAppointment: id={}", appointmentId);
         try {
             Appointment appointment = appointmentRepository.findById(appointmentId)
                     .orElseThrow(() -> {
@@ -217,7 +217,7 @@ public class AppointmentServiceImpl implements AppointmentService {
      */
     @Override
     public AppointmentResponse getAppointmentById(Long id) {
-        log.info("START getAppointmentById: id={}", id);
+        log.info("Called getAppointmentById: id={}", id);
         try {
             Appointment appointment = appointmentRepository.findById(id)
                     .orElseThrow(() -> {
@@ -245,7 +245,7 @@ public class AppointmentServiceImpl implements AppointmentService {
      */
     @Override
     public List<AppointmentResponseOwner> getAllOwnerAppointments() {
-        log.info("START getAllOwnerAppointments");
+        log.info("Called getAllOwnerAppointments");
         try {
             String ownerEmail = authUtil.getPrincipalEmail();
             Client owner = clientRepository.findByEmail(ownerEmail)
@@ -278,7 +278,7 @@ public class AppointmentServiceImpl implements AppointmentService {
      */
     @Override
     public List<AppointmentResponseOwner> getAllOwnerAppointmentsByStatus(AppointmentStatus status) {
-        log.info("START getAllOwnerAppointmentsByStatus: status={}", status);
+        log.info("Called getAllOwnerAppointmentsByStatus: status={}", status);
         try {
             String ownerEmail = authUtil.getPrincipalEmail();
             Client owner = clientRepository.findByEmail(ownerEmail)
@@ -314,7 +314,7 @@ public class AppointmentServiceImpl implements AppointmentService {
      */
     @Override
     public List<AppointmentResponseOwner> getAllAppointmentsByOwnerId(Long ownerId) {
-        log.info("START getAllAppointmentsByOwnerId: ownerId={}", ownerId);
+        log.info("Called getAllAppointmentsByOwnerId: ownerId={}", ownerId);
         if (ownerId == null || ownerId <= 0) {
             log.warn("Invalid ownerId: {}", ownerId);
             throw new IllegalArgumentException("Invalid ownerId: " + ownerId);
@@ -350,7 +350,7 @@ public class AppointmentServiceImpl implements AppointmentService {
      */
     @Override
     public List<AppointmentResponseOwner> getAllOwnerAppointmentsByPetId(Long petId) {
-        log.info("START getAllOwnerAppointmentsByPetId: petId={}", petId);
+        log.info("Called getAllOwnerAppointmentsByPetId: petId={}", petId);
         try {
             Pet pet = petRepository.findById(petId)
                     .orElseThrow(() -> {
@@ -381,7 +381,7 @@ public class AppointmentServiceImpl implements AppointmentService {
      */
     @Override
     public List<AppointmentResponse> getAllAppointments() {
-        log.info("START getAllAppointments");
+        log.info("Called getAllAppointments");
         try {
             List<AppointmentResponse> result = appointmentRepository.findAll().stream()
                     .map(AppointmentMapper::toResponse)
@@ -456,7 +456,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Scheduled(fixedDelay = 60_000)
     @Override
     public void updateNoShowAppointments() {
-        log.info("START updateNoShowAppointments");
+        log.info("Called updateNoShowAppointments");
         try {
             LocalDate today = LocalDate.now();
             LocalTime timeThreshold = LocalTime.now().minusHours(2);
